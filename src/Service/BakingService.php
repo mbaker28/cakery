@@ -38,7 +38,7 @@ class BakingService
 
         // ideal is a float so that two adjacent layer counts can both be "perfect"
         [$ideal, $steepness] = match($cake->getSize()) {
-            CakeSize::CUPCAKE   => [1.0, 15.0], // strict — a 3-layer cupcake is absurd
+            CakeSize::CUPCAKE   => [1.0, 18.0], // strict — a 3-layer cupcake is absurd
             CakeSize::SIX_INCH  => [2.0,  8.0],
             CakeSize::NINE_INCH => [2.5,  7.0], // 2 or 3 layers both great
             CakeSize::TIERED    => [3.5,  6.0], // 3 or 4 layers both great
