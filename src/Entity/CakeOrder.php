@@ -2,10 +2,14 @@
 
 namespace App\Entity;
 
+use App\Enum\CakeSize;
+use App\Enum\FrostingFlavor;
 use App\Enum\OrderStatus;
+use App\Enum\Topping;
 use App\Repository\CakeOrderRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
+use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: CakeOrderRepository::class)]
@@ -20,7 +24,7 @@ class CakeOrder
     private ?OrderStatus $status = null;
 
     #[ORM\Column]
-    private ?\DateTimeImmutable $dueAt = null;
+    private ?int $dueDay = null;
 
     #[ORM\Column]
     private ?float $payout = null;
@@ -39,6 +43,18 @@ class CakeOrder
 
     #[ORM\Column(length: 255)]
     private ?string $avatar = null;
+
+    #[ORM\Column(enumType: CakeSize::class)]
+    private ?CakeSize $requiredSize = null;
+
+    #[ORM\Column(enumType: FrostingFlavor::class)]
+    private ?FrostingFlavor $requiredFrostingFlavor = null;
+
+    #[ORM\Column(type: Types::SIMPLE_ARRAY, nullable: true, enumType: Topping::class)]
+    private ?array $requiredToppings = null;
+
+    #[ORM\Column]
+    private ?int $requiredLayers = null;
 
     public function __construct()
     {
@@ -69,14 +85,14 @@ class CakeOrder
         return $this;
     }
 
-    public function getDueAt(): ?\DateTimeImmutable
+    public function getDueDay(): ?int
     {
-        return $this->dueAt;
+        return $this->dueDay;
     }
 
-    public function setDueAt(\DateTimeImmutable $dueAt): static
+    public function setDueDay(int $dueDay): static
     {
-        $this->dueAt = $dueAt;
+        $this->dueDay = $dueDay;
 
         return $this;
     }
@@ -155,6 +171,57 @@ class CakeOrder
     public function setAvatar(string $avatar): static
     {
         $this->avatar = $avatar;
+
+        return $this;
+    }
+
+    public function getRequiredSize(): ?CakeSize
+    {
+        return $this->requiredSize;
+    }
+
+    public function setRequiredSize(CakeSize $requiredSize): static
+    {
+        $this->requiredSize = $requiredSize;
+
+        return $this;
+    }
+
+    public function getRequiredFrostingFlavor(): ?FrostingFlavor
+    {
+        return $this->requiredFrostingFlavor;
+    }
+
+    public function setRequiredFrostingFlavor(FrostingFlavor $requiredFrostingFlavor): static
+    {
+        $this->requiredFrostingFlavor = $requiredFrostingFlavor;
+
+        return $this;
+    }
+
+    /**
+     * @return Topping[]|null
+     */
+    public function getRequiredToppings(): ?array
+    {
+        return $this->requiredToppings;
+    }
+
+    public function setRequiredToppings(?array $requiredToppings): static
+    {
+        $this->requiredToppings = $requiredToppings;
+
+        return $this;
+    }
+
+    public function getRequiredLayers(): ?int
+    {
+        return $this->requiredLayers;
+    }
+
+    public function setRequiredLayers(int $requiredLayers): static
+    {
+        $this->requiredLayers = $requiredLayers;
 
         return $this;
     }
