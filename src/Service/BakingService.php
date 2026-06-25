@@ -9,6 +9,15 @@ use App\Enum\Topping;
 
 class BakingService
 {
+    private const COMBOS = [
+        [Topping::STRAWBERRIES,   FrostingFlavor::CREAM_CHEESE,  20.0],
+        [Topping::CHOCOLATE_CHIPS, FrostingFlavor::CHOCOLATE,    15.0],
+        [Topping::SPRINKLES,      FrostingFlavor::VANILLA,       10.0],
+        [Topping::CHOCOLATE_CHIPS, FrostingFlavor::VANILLA,       8.0],
+        [Topping::STRAWBERRIES,   Topping::SPRINKLES,            -8.0],
+        [Topping::CHOCOLATE_CHIPS, FrostingFlavor::CREAM_CHEESE, -5.0],
+    ];
+
     public function bake(Cake $cake): float
     {
         $score = 50.0
@@ -38,14 +47,6 @@ class BakingService
 
         return 30.0 - (abs($layers - $ideal) * $steepness);
     }
-
-    private const COMBOS = [
-        [Topping::STRAWBERRIES,   FrostingFlavor::CREAM_CHEESE,  20.0],
-        [Topping::CHOCOLATE_CHIPS, FrostingFlavor::CHOCOLATE,    15.0],
-        [Topping::SPRINKLES,      FrostingFlavor::VANILLA,       10.0],
-        [Topping::STRAWBERRIES,   Topping::SPRINKLES,            -8.0],
-        [Topping::CHOCOLATE_CHIPS, FrostingFlavor::CREAM_CHEESE, -5.0],
-    ];
 
     private function toppingScore(Cake $cake): float
     {
