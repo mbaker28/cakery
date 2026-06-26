@@ -165,6 +165,12 @@ class CakeController extends AbstractController
             'canBake'  => $bakery && $this->inventoryService->canBake($cake, $bakery),
         ];
 
+        try {
+            $params['requirements'] = $this->inventoryService->getRequirements($cake);
+        } catch (\LogicException) {
+            $params['requirements'] = null;
+        }
+
         $template = $fullPage ? 'cake/edit.html.twig' : 'cake/_builder.html.twig';
 
         return $this->render($template, $params);

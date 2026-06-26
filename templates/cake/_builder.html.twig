@@ -63,6 +63,26 @@
                 </div>
             </div>
 
+            {# Ingredient requirements #}
+            <div class="mb-4">
+                <label class="form-label fw-semibold">Ingredients needed</label>
+                {% if requirements %}
+                    <ul class="list-unstyled small mb-0">
+                        {% for key, needed in requirements %}
+                            {% set available = bakery.inventory[key] ?? 0 %}
+                            <li class="d-flex justify-content-between py-1 border-bottom">
+                                <span>{{ key|capitalize }}</span>
+                                <span class="{{ available >= needed ? 'text-success' : 'text-danger' }} fw-semibold">
+                                    {{ needed }} needed &middot; {{ available }} in stock
+                                </span>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <p class="text-muted small mb-0">Select a size and layer count to see requirements.</p>
+                {% endif %}
+            </div>
+
             {# Bake button — data-turbo-frame="_top" escapes the frame for full-page navigation #}
             <form method="post" action="{{ path('cake_bake', {id: order.id, cakeId: cake.id}) }}" data-turbo-frame="_top">
                 <button
