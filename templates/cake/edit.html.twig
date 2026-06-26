@@ -26,10 +26,10 @@
                     <p class="text-muted small">Due day {{ order.dueDay }}</p>
                     <ul class="list-unstyled small">
                         <li>🎂 {{ order.requiredSize.value }}</li>
-                        <li>🍦 {{ order.requiredFrostingFlavor.value }}</li>
+                        <li>🍦 {{ order.requiredFrostingFlavor.label }}</li>
                         <li>📏 {{ order.requiredLayers }} layer{{ order.requiredLayers > 1 ? 's' : '' }}</li>
                         {% if order.requiredToppings %}
-                            <li>✨ {{ order.requiredToppings|map(t => t.value)|join(', ') }}</li>
+                            <li>✨ {{ order.requiredToppings|map(t => t.label)|join(', ') }}</li>
                         {% else %}
                             <li class="text-muted">No toppings required</li>
                         {% endif %}

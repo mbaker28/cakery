@@ -3,9 +3,8 @@
 namespace App\Entity;
 
 use App\Enum\CakeSize;
-use App\Enum\FrostingFlavor;
+use App\Enum\Ingredient;
 use App\Enum\OrderStatus;
-use App\Enum\Topping;
 use App\Repository\CakeOrderRepository;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
@@ -42,10 +41,10 @@ class CakeOrder
     #[ORM\Column(enumType: CakeSize::class)]
     private ?CakeSize $requiredSize = null;
 
-    #[ORM\Column(enumType: FrostingFlavor::class)]
-    private ?FrostingFlavor $requiredFrostingFlavor = null;
+    #[ORM\Column(enumType: Ingredient::class)]
+    private ?Ingredient $requiredFrostingFlavor = null;
 
-    #[ORM\Column(type: Types::SIMPLE_ARRAY, nullable: true, enumType: Topping::class)]
+    #[ORM\Column(type: Types::SIMPLE_ARRAY, nullable: true, enumType: Ingredient::class)]
     private ?array $requiredToppings = null;
 
     #[ORM\Column]
@@ -161,12 +160,12 @@ class CakeOrder
         return $this;
     }
 
-    public function getRequiredFrostingFlavor(): ?FrostingFlavor
+    public function getRequiredFrostingFlavor(): ?Ingredient
     {
         return $this->requiredFrostingFlavor;
     }
 
-    public function setRequiredFrostingFlavor(FrostingFlavor $requiredFrostingFlavor): static
+    public function setRequiredFrostingFlavor(Ingredient $requiredFrostingFlavor): static
     {
         $this->requiredFrostingFlavor = $requiredFrostingFlavor;
 
@@ -174,7 +173,7 @@ class CakeOrder
     }
 
     /**
-     * @return Topping[]|null
+     * @return Ingredient[]|null
      */
     public function getRequiredToppings(): ?array
     {

@@ -37,6 +37,14 @@ class InventoryService
             $requirements[$ingredient] = (int) ceil($base * $multiplier);
         }
 
+        if ($cake->getFrostingFlavor() !== null) {
+            $requirements[$cake->getFrostingFlavor()->value] = 1;
+        }
+
+        foreach ($cake->getToppings() ?? [] as $topping) {
+            $requirements[$topping->value] = 1;
+        }
+
         return $requirements;
     }
 
@@ -83,7 +91,7 @@ class InventoryService
         $bakery->setMoney($bakery->getMoney() - $cost);
 
         $inventory = $bakery->getInventory();
-        $inventory[$ingredient->value] += $quantity;
+        $inventory[$ingredient->value] = ($inventory[$ingredient->value] ?? 0) + $quantity;
         $bakery->setInventory($inventory);
     }
 }

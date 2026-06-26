@@ -6,9 +6,8 @@ use App\Entity\Bakery;
 use App\Entity\Cake;
 use App\Entity\CakeOrder;
 use App\Enum\CakeSize;
-use App\Enum\FrostingFlavor;
+use App\Enum\Ingredient;
 use App\Enum\OrderStatus;
-use App\Enum\Topping;
 use App\Service\OrderService;
 use PHPUnit\Framework\TestCase;
 
@@ -33,9 +32,9 @@ class OrderServiceTest extends TestCase
             ->setPayout(50.0)
             ->setHappinessBonus(20)
             ->setRequiredSize(CakeSize::SIX_INCH)
-            ->setRequiredFrostingFlavor(FrostingFlavor::VANILLA)
+            ->setRequiredFrostingFlavor(Ingredient::FROSTING_VANILLA)
             ->setRequiredLayers(2)
-            ->setRequiredToppings([Topping::SPRINKLES]);
+            ->setRequiredToppings([Ingredient::TOPPING_SPRINKLES]);
     }
 
     private function matchingCake(float $qualityScore = 100.0): Cake
@@ -44,9 +43,9 @@ class OrderServiceTest extends TestCase
             ->setIsBaked(true)
             ->setQualityScore($qualityScore)
             ->setSize(CakeSize::SIX_INCH)
-            ->setFrostingFlavor(FrostingFlavor::VANILLA)
+            ->setFrostingFlavor(Ingredient::FROSTING_VANILLA)
             ->setLayers(2)
-            ->setToppings([Topping::SPRINKLES]);
+            ->setToppings([Ingredient::TOPPING_SPRINKLES]);
     }
 
     public function testFulfillScalesPayoutByQuality(): void
@@ -96,7 +95,7 @@ class OrderServiceTest extends TestCase
 
     public function testWrongFrostingPenalisesQuality(): void
     {
-        $cake = $this->matchingCake(100.0)->setFrostingFlavor(FrostingFlavor::CHOCOLATE);
+        $cake = $this->matchingCake(100.0)->setFrostingFlavor(Ingredient::FROSTING_CHOCOLATE);
         $this->order->setCake($cake);
 
         $this->service->fulfill($this->order, $this->bakery);
@@ -131,7 +130,7 @@ class OrderServiceTest extends TestCase
     {
         $cake = $this->matchingCake(60.0)
             ->setSize(CakeSize::CUPCAKE)
-            ->setFrostingFlavor(FrostingFlavor::CHOCOLATE)
+            ->setFrostingFlavor(Ingredient::FROSTING_CHOCOLATE)
             ->setLayers(4)
             ->setToppings([]);
         $this->order->setCake($cake);
@@ -144,7 +143,7 @@ class OrderServiceTest extends TestCase
 
     public function testExtraToppingsNotPenalised(): void
     {
-        $cake = $this->matchingCake(100.0)->setToppings([Topping::SPRINKLES, Topping::STRAWBERRIES]);
+        $cake = $this->matchingCake(100.0)->setToppings([Ingredient::TOPPING_SPRINKLES, Ingredient::TOPPING_STRAWBERRIES]);
         $this->order->setCake($cake);
 
         $this->service->fulfill($this->order, $this->bakery);

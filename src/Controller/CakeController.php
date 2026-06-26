@@ -5,10 +5,8 @@ namespace App\Controller;
 use App\Entity\Cake;
 use App\Entity\CakeOrder;
 use App\Enum\CakeSize;
-use App\Enum\FrostingFlavor;
 use App\Enum\Ingredient;
 use App\Enum\OrderStatus;
-use App\Enum\Topping;
 use App\Repository\BakeryRepository;
 use App\Service\BakingService;
 use App\Service\InventoryService;
@@ -75,9 +73,9 @@ class CakeController extends AbstractController
     public function setFrosting(CakeOrder $order, int $cakeId, Request $request): Response
     {
         $cake = $this->getCakeOr404($order, $cakeId);
-        $flavor = FrostingFlavor::tryFrom($request->request->getString('flavor'));
+        $flavor = Ingredient::tryFrom($request->request->getString('flavor'));
 
-        if ($flavor !== null) {
+        if ($flavor !== null && $flavor->group() === 'Frostings') {
             $cake->setFrostingFlavor($flavor);
             $this->em->flush();
         }
@@ -103,7 +101,10 @@ class CakeController extends AbstractController
     public function toggleTopping(CakeOrder $order, int $cakeId, Request $request): Response
     {
         $cake = $this->getCakeOr404($order, $cakeId);
-        $topping = Topping::tryFrom($request->request->getString('topping'));
+        $topping = Ingredient::tryFrom($request->request->getString('topping'));
+        if ($topping !== null && $topping->group() !== 'Toppings') {
+            $topping = null;
+        }
 
         if ($topping !== null) {
             $toppings = $cake->getToppings() ?? [];
@@ -159,8 +160,8 @@ class CakeController extends AbstractController
             'cake'        => $cake,
             'bakery'      => $bakery,
             'sizes'       => CakeSize::cases(),
-            'flavors'     => FrostingFlavor::cases(),
-            'toppings'    => Topping::cases(),
+            'flavors'     => Ingredient::frostings(),
+            'toppings'    => Ingredient::toppings(),
             'ingredients' => Ingredient::cases(),
             'canBake'     => $bakery && $this->inventoryService->canBake($cake, $bakery),
         ];

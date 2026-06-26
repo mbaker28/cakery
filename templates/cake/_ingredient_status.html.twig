@@ -6,7 +6,7 @@
                 {% for key, needed in requirements %}
                     {% set available = bakery.inventory[key] ?? 0 %}
                     <li class="d-flex justify-content-between py-1 border-bottom">
-                        <span>{{ key|capitalize }}</span>
+                        <span>{{ key|replace({'frosting_': '', 'topping_': '', '_': ' '})|title }}</span>
                         <span class="{{ available >= needed ? 'text-success' : 'text-danger' }} fw-semibold">
                             {{ needed }} needed &middot; {{ available }} in stock
                         </span>

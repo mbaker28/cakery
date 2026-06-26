@@ -43,6 +43,12 @@ class Bakery
         Ingredient::EGGS->value   => 2,
         Ingredient::SUGAR->value  => 2,
         Ingredient::MILK->value   => 2,
+        Ingredient::FROSTING_CHOCOLATE->value    => 2,
+        Ingredient::FROSTING_VANILLA->value      => 2,
+        Ingredient::FROSTING_CREAM_CHEESE->value => 2,
+        Ingredient::TOPPING_SPRINKLES->value        => 2,
+        Ingredient::TOPPING_CHOCOLATE_CHIPS->value  => 2,
+        Ingredient::TOPPING_STRAWBERRIES->value     => 2,
     ];
 
     public function getId(): ?int

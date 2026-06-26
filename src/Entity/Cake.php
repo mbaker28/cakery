@@ -3,8 +3,7 @@
 namespace App\Entity;
 
 use App\Enum\CakeSize;
-use App\Enum\FrostingFlavor;
-use App\Enum\Topping;
+use App\Enum\Ingredient;
 use App\Repository\CakeRepository;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
@@ -23,10 +22,10 @@ class Cake
     #[ORM\Column(nullable: true)]
     private ?int $layers = null;
 
-    #[ORM\Column(enumType: FrostingFlavor::class, nullable: true)]
-    private ?FrostingFlavor $frostingFlavor = null;
+    #[ORM\Column(enumType: Ingredient::class, nullable: true)]
+    private ?Ingredient $frostingFlavor = null;
 
-    #[ORM\Column(type: Types::SIMPLE_ARRAY, nullable: true, enumType: Topping::class)]
+    #[ORM\Column(type: Types::SIMPLE_ARRAY, nullable: true, enumType: Ingredient::class)]
     private ?array $toppings = null;
 
     #[ORM\Column(nullable: true)]
@@ -75,12 +74,12 @@ class Cake
         return $this;
     }
 
-    public function getFrostingFlavor(): ?FrostingFlavor
+    public function getFrostingFlavor(): ?Ingredient
     {
         return $this->frostingFlavor;
     }
 
-    public function setFrostingFlavor(FrostingFlavor $frostingFlavor): static
+    public function setFrostingFlavor(Ingredient $frostingFlavor): static
     {
         $this->frostingFlavor = $frostingFlavor;
 
@@ -88,7 +87,7 @@ class Cake
     }
 
     /**
-     * @return Topping[]|null
+     * @return Ingredient[]|null
      */
     public function getToppings(): ?array
     {

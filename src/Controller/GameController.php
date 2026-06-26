@@ -164,7 +164,9 @@ class GameController extends AbstractController
     {
         $fakeCake = (new Cake())
             ->setSize($order->getRequiredSize())
-            ->setLayers($order->getRequiredLayers());
+            ->setLayers($order->getRequiredLayers())
+            ->setFrostingFlavor($order->getRequiredFrostingFlavor())
+            ->setToppings($order->getRequiredToppings() ?? []);
 
         if ($this->inventoryService->canBake($fakeCake, $bakery)) {
             return true;
@@ -216,8 +218,11 @@ class GameController extends AbstractController
             'builderContext'  => null,
         ];
 
-        $orderId = $request->request->getInt('order_id');
-        $cakeId  = $request->request->getInt('cake_id');
+        $orderId = $request->request->getInt('order_id') ?: null;
+        $cakeId  = $request->request->getInt('cake_id') ?: null;
+
+        $params['orderId'] = $orderId;
+        $params['cakeId']  = $cakeId;
 
         if ($restocked && $orderId && $cakeId) {
             $order = $this->cakeOrderRepository->find($orderId);

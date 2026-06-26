@@ -1,6 +1,6 @@
 <turbo-stream action="replace" target="shop">
     <template>
-        {{ include('game/_shop.html.twig') }}
+        {{ include('game/_shop.html.twig', {orderId: orderId, cakeId: cakeId}) }}
     </template>
 </turbo-stream>
 <turbo-stream action="replace" target="navbar-stats">

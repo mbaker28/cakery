@@ -41,7 +41,7 @@
                         <form method="post" action="{{ path('cake_set_frosting', {id: order.id, cakeId: cake.id}) }}">
                             <input type="hidden" name="flavor" value="{{ flavor.value }}">
                             <button class="btn btn-sm {{ cake.frostingFlavor == flavor ? 'btn-primary' : 'btn-outline-secondary' }}">
-                                {{ flavor.value }}
+                                {{ flavor.label }}
                             </button>
                         </form>
                     {% endfor %}
@@ -56,7 +56,7 @@
                         <form method="post" action="{{ path('cake_toggle_topping', {id: order.id, cakeId: cake.id}) }}">
                             <input type="hidden" name="topping" value="{{ topping.value }}">
                             <button class="btn btn-sm {{ cake.toppings and topping in cake.toppings ? 'btn-primary' : 'btn-outline-secondary' }}">
-                                {{ topping.value }}
+                                {{ topping.label }}
                             </button>
                         </form>
                     {% endfor %}

@@ -3,30 +3,34 @@
 
     <h2 class="h4 mb-3">Pantry & Shop</h2>
 
-    <div class="row g-3">
-        {% for ingredient in ingredients %}
-            {% set stock = bakery.inventory[ingredient.value] ?? 0 %}
-            <div class="col-md-4 col-lg-2">
-                <div class="card shadow-sm text-center">
-                    <div class="card-body py-3">
-                        <div class="fw-semibold">{{ ingredient.label }}</div>
-                        <div class="display-6 my-1 {{ stock < 3 ? 'text-danger' : 'text-secondary' }}">{{ stock }}</div>
-                        <div class="text-muted small mb-2">${{ ingredient.costPerUnit|number_format(2) }}/unit</div>
-                        <form method="post" action="{{ path('game_restock') }}">
-                            <input type="hidden" name="ingredient" value="{{ ingredient.value }}">
-                            <input type="hidden" name="quantity" value="5">
-                            {% if orderId is defined and orderId %}
-                                <input type="hidden" name="order_id" value="{{ orderId }}">
-                                <input type="hidden" name="cake_id" value="{{ cakeId }}">
-                            {% endif %}
-                            <button class="btn btn-outline-primary btn-sm w-100"
-                                {{ bakery.money < ingredient.costPerUnit * 5 ? 'disabled' : '' }}>
-                                +5 (${{ (ingredient.costPerUnit * 5)|number_format(2) }})
-                            </button>
-                        </form>
+    {% set groups = ['Base Ingredients', 'Frostings', 'Toppings'] %}
+    {% for group in groups %}
+        <h6 class="text-muted text-uppercase small fw-semibold mt-3 mb-2">{{ group }}</h6>
+        <div class="row g-3 mb-2">
+            {% for ingredient in ingredients|filter(i => i.group == group) %}
+                {% set stock = bakery.inventory[ingredient.value] ?? 0 %}
+                <div class="col-6 col-md-4 col-lg-2">
+                    <div class="card shadow-sm text-center">
+                        <div class="card-body py-3 px-2">
+                            <div class="fw-semibold small">{{ ingredient.label }}</div>
+                            <div class="display-6 my-1 {{ stock < 2 ? 'text-danger' : 'text-secondary' }}">{{ stock }}</div>
+                            <div class="text-muted small mb-2">${{ ingredient.costPerUnit|number_format(2) }}/unit</div>
+                            <form method="post" action="{{ path('game_restock') }}">
+                                <input type="hidden" name="ingredient" value="{{ ingredient.value }}">
+                                <input type="hidden" name="quantity" value="5">
+                                {% if orderId is defined and orderId %}
+                                    <input type="hidden" name="order_id" value="{{ orderId }}">
+                                    <input type="hidden" name="cake_id" value="{{ cakeId }}">
+                                {% endif %}
+                                <button class="btn btn-outline-primary btn-sm w-100"
+                                    {{ bakery.money < ingredient.costPerUnit * 5 ? 'disabled' : '' }}>
+                                    +5 (${{ (ingredient.costPerUnit * 5)|number_format(2) }})
+                                </button>
+                            </form>
+                        </div>
                     </div>
                 </div>
-            </div>
-        {% endfor %}
-    </div>
+            {% endfor %}
+        </div>
+    {% endfor %}
 </div>

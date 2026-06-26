@@ -4,18 +4,17 @@ namespace App\Service;
 
 use App\Entity\Cake;
 use App\Enum\CakeSize;
-use App\Enum\FrostingFlavor;
-use App\Enum\Topping;
+use App\Enum\Ingredient;
 
 class BakingService
 {
     private const COMBOS = [
-        [Topping::STRAWBERRIES,   FrostingFlavor::CREAM_CHEESE,  20.0],
-        [Topping::CHOCOLATE_CHIPS, FrostingFlavor::CHOCOLATE,    15.0],
-        [Topping::SPRINKLES,      FrostingFlavor::VANILLA,       10.0],
-        [Topping::CHOCOLATE_CHIPS, FrostingFlavor::VANILLA,       8.0],
-        [Topping::STRAWBERRIES,   Topping::SPRINKLES,            -8.0],
-        [Topping::CHOCOLATE_CHIPS, FrostingFlavor::CREAM_CHEESE, -5.0],
+        [Ingredient::TOPPING_STRAWBERRIES,    Ingredient::FROSTING_CREAM_CHEESE,   20.0],
+        [Ingredient::TOPPING_CHOCOLATE_CHIPS, Ingredient::FROSTING_CHOCOLATE,      15.0],
+        [Ingredient::TOPPING_SPRINKLES,       Ingredient::FROSTING_VANILLA,        10.0],
+        [Ingredient::TOPPING_CHOCOLATE_CHIPS, Ingredient::FROSTING_VANILLA,         8.0],
+        [Ingredient::TOPPING_STRAWBERRIES,    Ingredient::TOPPING_SPRINKLES,       -8.0],
+        [Ingredient::TOPPING_CHOCOLATE_CHIPS, Ingredient::FROSTING_CREAM_CHEESE,   -5.0],
     ];
 
     public function bake(Cake $cake): float
@@ -36,12 +35,11 @@ class BakingService
     {
         $layers = $cake->getLayers() ?? 0;
 
-        // ideal is a float so that two adjacent layer counts can both be "perfect"
         [$ideal, $steepness] = match($cake->getSize()) {
-            CakeSize::CUPCAKE   => [1.0, 18.0], // strict — a 3-layer cupcake is absurd
+            CakeSize::CUPCAKE   => [1.0, 18.0],
             CakeSize::SIX_INCH  => [2.0,  8.0],
-            CakeSize::NINE_INCH => [2.5,  7.0], // 2 or 3 layers both great
-            CakeSize::TIERED    => [3.5,  6.0], // 3 or 4 layers both great
+            CakeSize::NINE_INCH => [2.5,  7.0],
+            CakeSize::TIERED    => [3.5,  6.0],
             default             => [2.0,  8.0],
         };
 
@@ -55,12 +53,8 @@ class BakingService
         $bonus = 0.0;
 
         foreach (self::COMBOS as [$a, $b, $modifier]) {
-            $hasA = $a instanceof Topping
-                ? in_array($a, $toppings, true)
-                : $frosting === $a;
-            $hasB = $b instanceof Topping
-                ? in_array($b, $toppings, true)
-                : $frosting === $b;
+            $hasA = in_array($a, $toppings, true) || $frosting === $a;
+            $hasB = in_array($b, $toppings, true) || $frosting === $b;
 
             if ($hasA && $hasB) {
                 $bonus += $modifier;
