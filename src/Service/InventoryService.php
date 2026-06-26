@@ -1,0 +1,81 @@
+<?php
+
+namespace App\Service;
+
+use App\Entity\Bakery;
+use App\Entity\Cake;
+use App\Enum\Ingredient;
+
+class InventoryService
+{
+    private const BASE_REQUIREMENTS = [
+        'flour'  => 2,
+        'butter' => 1,
+        'eggs'   => 1,
+        'sugar'  => 1,
+        'milk'   => 1,
+    ];
+
+    private const SIZE_MULTIPLIER = [
+        'cupcake' => 0.5,
+        '6"'      => 1.0,
+        '9"'      => 1.5,
+        'tiered'  => 2.5,
+    ];
+
+    /** @return array<string, int> */
+    public function getRequirements(Cake $cake): array
+    {
+        $multiplier = self::SIZE_MULTIPLIER[$cake->getSize()->value] * $cake->getLayers();
+
+        $requirements = [];
+        foreach (self::BASE_REQUIREMENTS as $ingredient => $base) {
+            $requirements[$ingredient] = (int) ceil($base * $multiplier);
+        }
+
+        return $requirements;
+    }
+
+    public function canBake(Cake $cake, Bakery $bakery): bool
+    {
+        $inventory = $bakery->getInventory();
+
+        foreach ($this->getRequirements($cake) as $ingredient => $needed) {
+            if (($inventory[$ingredient] ?? 0) < $needed) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    public function deduct(Cake $cake, Bakery $bakery): void
+    {
+        if (!$this->canBake($cake, $bakery)) {
+            throw new \RuntimeException('Insufficient ingredients to bake this cake.');
+        }
+
+        $inventory = $bakery->getInventory();
+
+        foreach ($this->getRequirements($cake) as $ingredient => $needed) {
+            $inventory[$ingredient] -= $needed;
+        }
+
+        $bakery->setInventory($inventory);
+    }
+
+    public function restock(Ingredient $ingredient, int $quantity, Bakery $bakery): void
+    {
+        $cost = $ingredient->costPerUnit() * $quantity;
+
+        if ($bakery->getMoney() < $cost) {
+            throw new \RuntimeException('Insufficient funds to restock.');
+        }
+
+        $bakery->setMoney($bakery->getMoney() - $cost);
+
+        $inventory = $bakery->getInventory();
+        $inventory[$ingredient->value] += $quantity;
+        $bakery->setInventory($inventory);
+    }
+}
