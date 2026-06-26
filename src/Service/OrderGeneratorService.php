@@ -42,15 +42,15 @@ class OrderGeneratorService
     ];
 
     private const BASE_PAYOUT_BY_SIZE = [
-        'cupcake' => 15.0,
-        '6"'      => 30.0,
-        '9"'      => 50.0,
-        'tiered'  => 80.0,
+        'cupcake' => 6.0,
+        '6"'      => 12.0,
+        '9"'      => 20.0,
+        'tiered'  => 35.0,
     ];
 
-    private const PAYOUT_PER_LAYER   = 5.0;
-    private const PAYOUT_PER_TOPPING = 8.0;
-    private const PAYOUT_PER_TIER    = 10.0;
+    private const PAYOUT_PER_LAYER   = 2.0;
+    private const PAYOUT_PER_TOPPING = 3.0;
+    private const PAYOUT_PER_TIER    = 3.0;
 
     private const HAPPINESS_BONUS_BY_TIER = [
         1 => [5, 10],

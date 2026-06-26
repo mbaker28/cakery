@@ -7,8 +7,6 @@ use App\Enum\FrostingFlavor;
 use App\Enum\OrderStatus;
 use App\Enum\Topping;
 use App\Repository\CakeOrderRepository;
-use Doctrine\Common\Collections\ArrayCollection;
-use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use Doctrine\ORM\Mapping as ORM;
 
@@ -32,11 +30,8 @@ class CakeOrder
     #[ORM\Column]
     private ?int $happinessBonus = null;
 
-    /**
-     * @var Collection<int, Cake>
-     */
-    #[ORM\OneToMany(targetEntity: Cake::class, mappedBy: 'cakeOrder', orphanRemoval: true)]
-    private Collection $cakes;
+    #[ORM\OneToOne(targetEntity: Cake::class, mappedBy: 'cakeOrder', cascade: ['persist', 'remove'], orphanRemoval: true)]
+    private ?Cake $cake = null;
 
     #[ORM\Column(length: 255)]
     private ?string $customerName = null;
@@ -55,11 +50,6 @@ class CakeOrder
 
     #[ORM\Column]
     private ?int $requiredLayers = null;
-
-    public function __construct()
-    {
-        $this->cakes = new ArrayCollection();
-    }
 
     public function getId(): ?int
     {
@@ -121,33 +111,17 @@ class CakeOrder
         return $this;
     }
 
-    /**
-     * @return Collection<int, Cake>
-     */
-    public function getCakes(): Collection
+    public function getCake(): ?Cake
     {
-        return $this->cakes;
+        return $this->cake;
     }
 
-    public function addCake(Cake $cake): static
+    public function setCake(?Cake $cake): static
     {
-        if (!$this->cakes->contains($cake)) {
-            $this->cakes->add($cake);
+        $this->cake = $cake;
+        if ($cake !== null && $cake->getCakeOrder() !== $this) {
             $cake->setCakeOrder($this);
         }
-
-        return $this;
-    }
-
-    public function removeCake(Cake $cake): static
-    {
-        if ($this->cakes->removeElement($cake)) {
-            // set the owning side to null (unless already changed)
-            if ($cake->getCakeOrder() === $this) {
-                $cake->setCakeOrder(null);
-            }
-        }
-
         return $this;
     }
 

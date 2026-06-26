@@ -21,22 +21,20 @@ class OrderService
 
     public function fulfill(CakeOrder $order, Bakery $bakery): float
     {
-        $cakes = $order->getCakes();
+        $cake = $order->getCake();
 
-        if ($cakes->isEmpty() || $cakes->exists(fn($_, $cake) => !$cake->isBaked())) {
-            throw new \LogicException('All cakes must be baked before fulfilling an order.');
+        if ($cake === null || !$cake->isBaked()) {
+            throw new \LogicException('The cake must be baked before fulfilling an order.');
         }
 
-        $avgQuality = array_sum(
-            $cakes->map(fn($cake) => $this->effectiveQuality($cake, $order))->toArray()
-        ) / $cakes->count();
+        $quality = $this->effectiveQuality($cake, $order);
 
-        if ($avgQuality < self::MIN_QUALITY) {
+        if ($quality < self::MIN_QUALITY) {
             $this->fail($order, $bakery);
             return 0.0;
         }
 
-        $scale = $avgQuality / 100.0;
+        $scale = $quality / 100.0;
         $earned = $order->getPayout() * $scale;
 
         $bakery->setMoney($bakery->getMoney() + $earned);

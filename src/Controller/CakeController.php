@@ -36,10 +36,8 @@ class CakeController extends AbstractController
             return $this->redirectToRoute('game_index');
         }
 
-        // If already in-progress, redirect to the existing unbaked cake rather than creating another
-        $existingCake = $order->getCakes()->findFirst(fn($_, $c) => !$c->isBaked());
-        if ($existingCake !== null) {
-            return $this->redirectToRoute('cake_edit', ['id' => $order->getId(), 'cakeId' => $existingCake->getId()]);
+        if ($order->getCake() !== null) {
+            return $this->redirectToRoute('cake_edit', ['id' => $order->getId(), 'cakeId' => $order->getCake()->getId()]);
         }
 
         $cake = (new Cake())->setCakeOrder($order);
@@ -178,9 +176,9 @@ class CakeController extends AbstractController
 
     private function getCakeOr404(CakeOrder $order, int $cakeId): Cake
     {
-        $cake = $order->getCakes()->findFirst(fn($_, $c) => $c->getId() === $cakeId);
+        $cake = $order->getCake();
 
-        if ($cake === null) {
+        if ($cake === null || $cake->getId() !== $cakeId) {
             throw $this->createNotFoundException();
         }
 

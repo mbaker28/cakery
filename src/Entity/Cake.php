@@ -35,7 +35,7 @@ class Cake
     #[ORM\Column]
     private bool $isBaked = false;
 
-    #[ORM\ManyToOne(inversedBy: 'cakes')]
+    #[ORM\OneToOne(inversedBy: 'cake')]
     #[ORM\JoinColumn(nullable: false)]
     private ?CakeOrder $cakeOrder = null;
 

@@ -51,7 +51,7 @@ class OrderServiceTest extends TestCase
 
     public function testFulfillScalesPayoutByQuality(): void
     {
-        $this->order->addCake($this->matchingCake(100.0));
+        $this->order->setCake($this->matchingCake(100.0));
 
         $this->service->fulfill($this->order, $this->bakery);
 
@@ -63,7 +63,7 @@ class OrderServiceTest extends TestCase
 
     public function testFulfillWithPartialQualityScalesPayout(): void
     {
-        $this->order->addCake($this->matchingCake(50.0));
+        $this->order->setCake($this->matchingCake(50.0));
 
         $this->service->fulfill($this->order, $this->bakery);
 
@@ -73,7 +73,7 @@ class OrderServiceTest extends TestCase
 
     public function testFulfillBelowMinQualityFails(): void
     {
-        $this->order->addCake($this->matchingCake(10.0));
+        $this->order->setCake($this->matchingCake(10.0));
 
         $this->service->fulfill($this->order, $this->bakery);
 
@@ -83,21 +83,10 @@ class OrderServiceTest extends TestCase
         $this->assertSame(OrderStatus::FAILED, $this->order->getStatus());
     }
 
-    public function testFulfillAveragesQualityAcrossMultipleCakes(): void
-    {
-        $this->order->addCake($this->matchingCake(100.0));
-        $this->order->addCake($this->matchingCake(0.0));
-
-        $this->service->fulfill($this->order, $this->bakery);
-
-        // avg quality = 50, scale = 0.5
-        $this->assertEqualsWithDelta(125.0, $this->bakery->getMoney(), 0.01);
-    }
-
     public function testWrongSizePenalisesQuality(): void
     {
         $cake = $this->matchingCake(100.0)->setSize(CakeSize::CUPCAKE);
-        $this->order->addCake($cake);
+        $this->order->setCake($cake);
 
         $this->service->fulfill($this->order, $this->bakery);
 
@@ -108,7 +97,7 @@ class OrderServiceTest extends TestCase
     public function testWrongFrostingPenalisesQuality(): void
     {
         $cake = $this->matchingCake(100.0)->setFrostingFlavor(FrostingFlavor::CHOCOLATE);
-        $this->order->addCake($cake);
+        $this->order->setCake($cake);
 
         $this->service->fulfill($this->order, $this->bakery);
 
@@ -119,7 +108,7 @@ class OrderServiceTest extends TestCase
     public function testWrongLayersPenalisesQuality(): void
     {
         $cake = $this->matchingCake(100.0)->setLayers(4);
-        $this->order->addCake($cake);
+        $this->order->setCake($cake);
 
         $this->service->fulfill($this->order, $this->bakery);
 
@@ -130,7 +119,7 @@ class OrderServiceTest extends TestCase
     public function testMissingToppingPenalisesQuality(): void
     {
         $cake = $this->matchingCake(100.0)->setToppings([]);
-        $this->order->addCake($cake);
+        $this->order->setCake($cake);
 
         $this->service->fulfill($this->order, $this->bakery);
 
@@ -145,7 +134,7 @@ class OrderServiceTest extends TestCase
             ->setFrostingFlavor(FrostingFlavor::CHOCOLATE)
             ->setLayers(4)
             ->setToppings([]);
-        $this->order->addCake($cake);
+        $this->order->setCake($cake);
 
         // effective quality = 60 - 40 - 20 - 15 - 10 = -25, clamped to 0 → fails
         $this->service->fulfill($this->order, $this->bakery);
@@ -156,7 +145,7 @@ class OrderServiceTest extends TestCase
     public function testExtraToppingsNotPenalised(): void
     {
         $cake = $this->matchingCake(100.0)->setToppings([Topping::SPRINKLES, Topping::STRAWBERRIES]);
-        $this->order->addCake($cake);
+        $this->order->setCake($cake);
 
         $this->service->fulfill($this->order, $this->bakery);
 
@@ -166,7 +155,7 @@ class OrderServiceTest extends TestCase
 
     public function testFulfillThrowsIfCakesNotBaked(): void
     {
-        $this->order->addCake((new Cake())->setIsBaked(false));
+        $this->order->setCake((new Cake())->setIsBaked(false));
 
         $this->expectException(\LogicException::class);
         $this->service->fulfill($this->order, $this->bakery);
@@ -199,7 +188,7 @@ class OrderServiceTest extends TestCase
     public function testFulfillClampsReputationAt100(): void
     {
         $this->bakery->setReputation(95);
-        $this->order->addCake($this->matchingCake(100.0));
+        $this->order->setCake($this->matchingCake(100.0));
 
         $this->service->fulfill($this->order, $this->bakery);
 
