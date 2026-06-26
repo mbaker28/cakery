@@ -3,6 +3,7 @@
 namespace App\Repository;
 
 use App\Entity\CakeOrder;
+use App\Enum\OrderStatus;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
@@ -14,6 +15,17 @@ class CakeOrderRepository extends ServiceEntityRepository
     public function __construct(ManagerRegistry $registry)
     {
         parent::__construct($registry, CakeOrder::class);
+    }
+
+    /** @return CakeOrder[] */
+    public function findActiveOrders(): array
+    {
+        return $this->createQueryBuilder('o')
+            ->andWhere('o.status IN (:statuses)')
+            ->setParameter('statuses', [OrderStatus::PENDING, OrderStatus::IN_PROGRESS])
+            ->orderBy('o.dueDay', 'ASC')
+            ->getQuery()
+            ->getResult();
     }
 
     //    /**
