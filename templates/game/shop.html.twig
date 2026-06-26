@@ -1,0 +1,65 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Stock Up — {{ bakery.name }}{% endblock %}
+
+{% block navbar %}
+    <nav class="navbar navbar-dark bg-dark">
+        <div class="container">
+            <span class="navbar-brand mb-0 h1">🎂 {{ bakery.name }}</span>
+            <div class="d-flex align-items-center gap-3">
+                <div id="navbar-stats" class="d-flex gap-4 text-white small align-items-center">
+                    <span>💰 ${{ bakery.money|number_format(2) }}</span>
+                    <span>⭐ {{ bakery.reputation }}/100</span>
+                    <span>📅 Day {{ bakery.day }}</span>
+                </div>
+                <form method="post" action="{{ path('game_restart') }}"
+                      onsubmit="return confirm('Start a new game? Your current progress will be lost.')">
+                    <button class="btn btn-outline-danger btn-sm">New Game</button>
+                </form>
+            </div>
+        </div>
+    </nav>
+{% endblock %}
+
+{% block body %}
+    <div class="d-flex justify-content-between align-items-start mb-4">
+        <div>
+            <h2 class="h4 mb-1">Stock Up</h2>
+            <p class="text-muted mb-0">
+                Day {{ bakery.day + 1 }} will bring
+                <strong>{{ nextDayOrders }} order{{ nextDayOrders > 1 ? 's' : '' }}</strong>.
+                You must have enough supplies to fulfil every one — or it's game over.
+            </p>
+        </div>
+        <form method="post" action="{{ path('game_start_day') }}">
+            <button class="btn btn-success btn-lg">Start Day {{ bakery.day + 1 }} →</button>
+        </form>
+    </div>
+
+    {% set groups = ['Base Ingredients', 'Frostings', 'Toppings'] %}
+    {% for group in groups %}
+        <h6 class="text-muted text-uppercase small fw-semibold mt-4 mb-2">{{ group }}</h6>
+        <div class="row g-3 mb-2">
+            {% for item in restockables|filter(i => i.group == group) %}
+                {% set stock = bakery.inventory[item.value] ?? 0 %}
+                <div class="col-6 col-md-4 col-lg-2">
+                    <div class="card shadow-sm text-center {{ stock < 2 ? 'border-danger' : '' }}">
+                        <div class="card-body py-3 px-2">
+                            <div class="fw-semibold small">{{ item.label }}</div>
+                            <div class="display-6 my-1 {{ stock < 2 ? 'text-danger fw-bold' : 'text-secondary' }}">{{ stock }}</div>
+                            <div class="text-muted small mb-2">${{ item.costPerUnit|number_format(2) }}/unit</div>
+                            <form method="post" action="{{ path('game_restock') }}">
+                                <input type="hidden" name="ingredient" value="{{ item.value }}">
+                                <input type="hidden" name="quantity" value="5">
+                                <button class="btn btn-outline-primary btn-sm w-100"
+                                        {{ bakery.money < item.costPerUnit * 5 ? 'disabled' : '' }}>
+                                    +5 (${{ (item.costPerUnit * 5)|number_format(2) }})
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% endfor %}
+{% endblock %}

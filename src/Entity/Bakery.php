@@ -3,6 +3,7 @@
 namespace App\Entity;
 
 use App\Enum\FrostingFlavor;
+use App\Enum\GamePhase;
 use App\Enum\Ingredient;
 use App\Enum\Restockable;
 use App\Enum\Topping;
@@ -35,6 +36,9 @@ class Bakery
 
     #[ORM\Column]
     private ?int $ordersFailed = null;
+
+    #[ORM\Column(enumType: GamePhase::class, length: 10)]
+    private GamePhase $phase = GamePhase::DAY;
 
     /**
      * @var array<string, int> $inventory
@@ -146,6 +150,18 @@ class Bakery
     public function setInventory(array $inventory): static
     {
         $this->inventory = $inventory;
+
+        return $this;
+    }
+
+    public function getPhase(): GamePhase
+    {
+        return $this->phase;
+    }
+
+    public function setPhase(GamePhase $phase): static
+    {
+        $this->phase = $phase;
 
         return $this;
     }
