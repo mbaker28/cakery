@@ -3,6 +3,7 @@
 namespace App\Controller;
 
 use App\Entity\Bakery;
+use App\Enum\OrderStatus;
 use App\Repository\BakeryRepository;
 use App\Repository\CakeOrderRepository;
 use App\Service\OrderGeneratorService;
@@ -24,7 +25,7 @@ class GameController extends AbstractController
     #[Route('/', name: 'game_index')]
     public function index(): Response
     {
-        $bakery = $this->bakeryRepository->find(1);
+        $bakery = $this->bakeryRepository->findOneBy([]);
 
         if ($bakery === null) {
             return $this->redirectToRoute('game_new');
@@ -41,7 +42,7 @@ class GameController extends AbstractController
     #[Route('/new', name: 'game_new')]
     public function new(): Response
     {
-        if ($this->bakeryRepository->find(1) !== null) {
+        if ($this->bakeryRepository->findOneBy([]) !== null) {
             return $this->redirectToRoute('game_index');
         }
 
@@ -51,7 +52,7 @@ class GameController extends AbstractController
     #[Route('/new', name: 'game_create', methods: ['POST'])]
     public function create(Request $request): Response
     {
-        if ($this->bakeryRepository->find(1) !== null) {
+        if ($this->bakeryRepository->findOneBy([]) !== null) {
             return $this->redirectToRoute('game_index');
         }
 
@@ -68,6 +69,39 @@ class GameController extends AbstractController
         for ($i = 0; $i < 3; $i++) {
             $order = $this->orderGeneratorService->generate($bakery->getReputation(), $bakery->getDay());
             $this->em->persist($order);
+        }
+
+        $this->em->flush();
+
+        return $this->redirectToRoute('game_index');
+    }
+
+    #[Route('/advance-day', name: 'game_advance_day', methods: ['POST'])]
+    public function advanceDay(): Response
+    {
+        $bakery = $this->bakeryRepository->findOneBy([]);
+
+        if ($bakery === null) {
+            return $this->redirectToRoute('game_new');
+        }
+
+        $bakery->setDay($bakery->getDay() + 1);
+
+        // Expire overdue orders
+        foreach ($this->cakeOrderRepository->findActiveOrders() as $order) {
+            if ($order->getDueDay() < $bakery->getDay()) {
+                $order->setStatus(OrderStatus::FAILED);
+                $bakery->setReputation(max(0, $bakery->getReputation() - 10));
+                $bakery->setOrdersFailed($bakery->getOrdersFailed() + 1);
+            }
+        }
+
+        // Top up to max orders
+        $activeCount = count($this->cakeOrderRepository->findActiveOrders());
+        while ($this->orderGeneratorService->canGenerate($activeCount)) {
+            $order = $this->orderGeneratorService->generate($bakery->getReputation(), $bakery->getDay());
+            $this->em->persist($order);
+            $activeCount++;
         }
 
         $this->em->flush();

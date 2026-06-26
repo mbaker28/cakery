@@ -1,0 +1,31 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Start a New Bakery{% endblock %}
+
+{% block body %}
+    <div class="row justify-content-center">
+        <div class="col-md-5">
+            <div class="card shadow-sm">
+                <div class="card-body p-4">
+                    <h1 class="card-title h3 mb-1">Open your bakery</h1>
+                    <p class="text-muted mb-4">Give your bakery a name to get started.</p>
+                    <form method="post" action="{{ path('game_create') }}">
+                        <div class="mb-3">
+                            <label for="name" class="form-label">Bakery name</label>
+                            <input
+                                type="text"
+                                id="name"
+                                name="name"
+                                class="form-control"
+                                placeholder="Sweet Dreams Bakery"
+                                required
+                                autofocus
+                            >
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">Open for business</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

@@ -17,13 +17,13 @@ class Cake
     #[ORM\Column]
     private ?int $id = null;
 
-    #[ORM\Column(enumType: CakeSize::class)]
+    #[ORM\Column(enumType: CakeSize::class, nullable: true)]
     private ?CakeSize $size = null;
 
-    #[ORM\Column]
+    #[ORM\Column(nullable: true)]
     private ?int $layers = null;
 
-    #[ORM\Column(enumType: FrostingFlavor::class)]
+    #[ORM\Column(enumType: FrostingFlavor::class, nullable: true)]
     private ?FrostingFlavor $frostingFlavor = null;
 
     #[ORM\Column(type: Types::SIMPLE_ARRAY, nullable: true, enumType: Topping::class)]
@@ -33,7 +33,7 @@ class Cake
     private ?float $qualityScore = null;
 
     #[ORM\Column]
-    private ?bool $isBaked = null;
+    private bool $isBaked = false;
 
     #[ORM\ManyToOne(inversedBy: 'cakes')]
     #[ORM\JoinColumn(nullable: false)]
@@ -114,7 +114,7 @@ class Cake
         return $this;
     }
 
-    public function isBaked(): ?bool
+    public function isBaked(): bool
     {
         return $this->isBaked;
     }

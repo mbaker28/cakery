@@ -1,0 +1,61 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ bakery.name }}{% endblock %}
+
+{% block navbar %}
+    <nav class="navbar navbar-dark bg-dark">
+        <div class="container">
+            <span class="navbar-brand mb-0 h1">🎂 {{ bakery.name }}</span>
+            <div class="d-flex gap-4 text-white small align-items-center">
+                <span>💰 ${{ bakery.money|number_format(2) }}</span>
+                <span>⭐ {{ bakery.reputation }}/100</span>
+                <span>📅 Day {{ bakery.day }}</span>
+            </div>
+        </div>
+    </nav>
+{% endblock %}
+
+{% block body %}
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="h4 mb-0">Active Orders</h2>
+        <form method="post" action="{{ path('game_advance_day') }}">
+            <button class="btn btn-outline-secondary btn-sm">Advance Day →</button>
+        </form>
+    </div>
+
+    <turbo-frame id="orders">
+        {% if orders is empty %}
+            <p class="text-muted">No active orders. Advance the day to get new ones.</p>
+        {% else %}
+            <div class="row g-3">
+                {% for order in orders %}
+                    <div class="col-md-4">
+                        <div class="card h-100 shadow-sm">
+                            <div class="card-body">
+                                <div class="d-flex align-items-center gap-2 mb-3">
+                                    <span class="fs-3">{{ order.avatar }}</span>
+                                    <div>
+                                        <div class="fw-semibold">{{ order.customerName }}</div>
+                                        <small class="text-muted">Due day {{ order.dueDay }}</small>
+                                    </div>
+                                </div>
+                                <ul class="list-unstyled small mb-3">
+                                    <li>🎂 {{ order.requiredSize.value }}</li>
+                                    <li>🍦 {{ order.requiredFrostingFlavor.value }}</li>
+                                    <li>📏 {{ order.requiredLayers }} layer{{ order.requiredLayers > 1 ? 's' : '' }}</li>
+                                    {% if order.requiredToppings %}
+                                        <li>✨ {{ order.requiredToppings|map(t => t.value)|join(', ') }}</li>
+                                    {% endif %}
+                                </ul>
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <span class="text-success fw-semibold">${{ order.payout|number_format(2) }}</span>
+                                    <a href="{{ path('cake_build', {id: order.id}) }}" class="btn btn-primary btn-sm">Bake</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    </turbo-frame>
+{% endblock %}
