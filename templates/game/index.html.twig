@@ -7,7 +7,6 @@
         <div class="container">
             <span class="navbar-brand mb-0 h1">🎂 {{ bakery.name }}</span>
             <div class="d-flex align-items-center gap-3">
-                {{ include('game/_timer.html.twig') }}
                 <div id="navbar-stats" class="d-flex gap-4 text-white small align-items-center">
                     <span>💰 ${{ bakery.money|number_format(2) }}</span>
                     <span>⭐ {{ bakery.reputation }}/100</span>
@@ -23,32 +22,29 @@
 {% endblock %}
 
 {% block body %}
-    {% set hasBlocking = blockingOrders is not empty %}
-
     <div class="d-flex justify-content-between align-items-center mb-4">
         <h2 class="h4 mb-0">Active Orders</h2>
-        {% if dayExpired %}
+        {% if orders is empty %}
             <form method="post" action="{{ path('game_advance_day') }}">
-                <button class="btn btn-warning btn-sm">End Day →</button>
+                <button class="btn btn-outline-secondary btn-sm">Next Day →</button>
             </form>
-        {% elseif hasBlocking %}
-            <span class="text-danger small fw-semibold">⚠️ Complete today's orders before advancing</span>
         {% else %}
-            <form method="post" action="{{ path('game_advance_day') }}">
-                <button class="btn btn-outline-secondary btn-sm">Advance Day →</button>
-            </form>
+            <span class="text-muted small">{{ orders|length }} order{{ orders|length > 1 ? 's' : '' }} remaining</span>
         {% endif %}
     </div>
 
     <turbo-frame id="orders">
         {% if orders is empty %}
-            <p class="text-muted">No active orders. Advance the day to get new ones.</p>
+            <p class="text-muted">All done! Start the next day when you're ready.</p>
         {% else %}
             <div class="row g-3">
                 {% for order in orders %}
                     {% set isUnspawned = order.spawnAt.timestamp > serverNow %}
                     <div class="col-md-4 order-card {{ isUnspawned ? 'd-none' : '' }}"
-                         data-spawn-at="{{ order.spawnAt.timestamp }}">
+                         data-controller="order-timer"
+                         data-order-timer-spawn-at-value="{{ order.spawnAt.timestamp }}"
+                         data-order-timer-fails-at-value="{{ order.failsAt ? order.failsAt.timestamp : 0 }}"
+                         data-order-timer-server-now-value="{{ serverNow }}">
                         <div class="card h-100 shadow-sm {{ order.status.value == 'in_progress' ? 'border-warning' : '' }}">
                             <div class="card-body">
                                 <div class="d-flex align-items-start justify-content-between mb-3">
@@ -56,11 +52,7 @@
                                         <span class="fs-3">{{ order.avatar }}</span>
                                         <div class="fw-semibold">{{ order.customerName }}</div>
                                     </div>
-                                    {% if order.status.value == 'in_progress' %}
-                                        <span class="badge bg-warning text-dark">In Progress</span>
-                                    {% else %}
-                                        <span class="badge bg-secondary">Pending</span>
-                                    {% endif %}
+                                    <span data-order-timer-target="countdown" class="badge bg-secondary">--:--</span>
                                 </div>
                                 <ul class="list-unstyled small mb-3">
                                     <li>🎂 {{ order.requiredSize.value }}</li>
@@ -84,6 +76,10 @@
                                 </div>
                             </div>
                         </div>
+                        {% if order.failsAt %}
+                            <form method="post" action="{{ path('order_expire', {id: order.id}) }}"
+                                  data-order-timer-target="expireForm" class="d-none"></form>
+                        {% endif %}
                     </div>
                 {% endfor %}
             </div>
