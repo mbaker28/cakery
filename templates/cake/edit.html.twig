@@ -19,11 +19,26 @@
     <div class="row g-4">
 
         {# Order requirements #}
-        <div class="col-md-3">
+        <div class="col-md-3"
+             {% if order.failsAt %}
+             data-controller="order-timer"
+             data-order-timer-spawn-at-value="{{ order.spawnAt.timestamp }}"
+             data-order-timer-fails-at-value="{{ order.failsAt.timestamp }}"
+             data-order-timer-server-now-value="{{ serverNow }}"
+             {% endif %}>
             <div class="card shadow-sm h-100">
                 <div class="card-body">
-                    <h5 class="card-title">{{ order.customerName }}'s Order</h5>
-                    <ul class="list-unstyled small">
+                    <div class="d-flex justify-content-between align-items-start mb-1">
+                        <h5 class="card-title mb-0">{{ order.customerName }}'s Order</h5>
+                        {% if order.failsAt %}
+                            <span data-order-timer-target="countdown" class="badge bg-secondary">--:--</span>
+                        {% endif %}
+                    </div>
+                    {% if order.failsAt %}
+                        <form method="post" action="{{ path('order_expire', {id: order.id}) }}"
+                              data-order-timer-target="expireForm" class="d-none"></form>
+                    {% endif %}
+                    <ul class="list-unstyled small mt-2">
                         <li>🎂 {{ order.requiredSize.value }}</li>
                         <li>🍦 {{ order.requiredFrostingFlavor.label }}</li>
                         <li>📏 {{ order.requiredLayers }} layer{{ order.requiredLayers > 1 ? 's' : '' }}</li>
