@@ -1,0 +1,11 @@
+{% if dayEndsAt is defined and dayEndsAt and dayEndsAt > serverNow %}
+<div data-controller="day-timer"
+     data-day-timer-ends-at-value="{{ dayEndsAt }}"
+     data-day-timer-server-now-value="{{ serverNow }}"
+     class="d-flex align-items-center">
+    <span data-day-timer-target="display"
+          class="badge bg-warning text-dark"
+          style="font-size:.95rem;font-variant-numeric:tabular-nums;min-width:5.5ch;">⏱ --:--</span>
+    <form method="post" action="{{ path('game_day_expired') }}" data-day-timer-target="expiredForm" class="d-none"></form>
+</div>
+{% endif %}

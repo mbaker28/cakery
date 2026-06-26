@@ -23,47 +23,35 @@ class CakeOrderRepository extends ServiceEntityRepository
         return $this->createQueryBuilder('o')
             ->andWhere('o.status IN (:statuses)')
             ->setParameter('statuses', [OrderStatus::PENDING, OrderStatus::IN_PROGRESS])
-            ->orderBy('o.dueDay', 'ASC')
+            ->orderBy('o.spawnAt', 'ASC')
             ->getQuery()
             ->getResult();
     }
 
-    /** Orders that must be fulfilled before the day can advance (due today or overdue). */
+    /** Orders visible to the player (already spawned) that are still pending/in-progress. */
     /** @return CakeOrder[] */
-    public function findBlockingOrders(int $currentDay): array
+    public function findBlockingOrders(\DateTimeImmutable $now): array
     {
         return $this->createQueryBuilder('o')
             ->andWhere('o.status IN (:statuses)')
-            ->andWhere('o.dueDay <= :day')
+            ->andWhere('o.spawnAt <= :now')
             ->setParameter('statuses', [OrderStatus::PENDING, OrderStatus::IN_PROGRESS])
-            ->setParameter('day', $currentDay)
-            ->orderBy('o.dueDay', 'ASC')
+            ->setParameter('now', $now)
+            ->orderBy('o.spawnAt', 'ASC')
             ->getQuery()
             ->getResult();
     }
 
-    //    /**
-    //     * @return Order[] Returns an array of Order objects
-    //     */
-    //    public function findByExampleField($value): array
-    //    {
-    //        return $this->createQueryBuilder('o')
-    //            ->andWhere('o.exampleField = :val')
-    //            ->setParameter('val', $value)
-    //            ->orderBy('o.id', 'ASC')
-    //            ->setMaxResults(10)
-    //            ->getQuery()
-    //            ->getResult()
-    //        ;
-    //    }
-
-    //    public function findOneBySomeField($value): ?Order
-    //    {
-    //        return $this->createQueryBuilder('o')
-    //            ->andWhere('o.exampleField = :val')
-    //            ->setParameter('val', $value)
-    //            ->getQuery()
-    //            ->getOneOrNullResult()
-    //        ;
-    //    }
+    /** Orders not yet revealed to the player. */
+    /** @return CakeOrder[] */
+    public function findUnspawned(\DateTimeImmutable $now): array
+    {
+        return $this->createQueryBuilder('o')
+            ->andWhere('o.status = :status')
+            ->andWhere('o.spawnAt > :now')
+            ->setParameter('status', OrderStatus::PENDING)
+            ->setParameter('now', $now)
+            ->getQuery()
+            ->getResult();
+    }
 }

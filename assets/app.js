@@ -8,6 +8,8 @@ import './styles/app.css';
 import { Toast } from 'bootstrap';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import '@hotwired/turbo';
+import { startStimulusApp } from '@symfony/stimulus-bundle';
+startStimulusApp();
 
 function showToast(el) {
     if (!Toast.getInstance(el)) new Toast(el).show();

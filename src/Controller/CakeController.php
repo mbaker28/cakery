@@ -9,6 +9,7 @@ use App\Enum\FrostingFlavor;
 use App\Enum\Ingredient;
 use App\Enum\OrderStatus;
 use App\Enum\Topping;
+use App\Config;
 use App\Repository\BakeryRepository;
 use App\Service\BakingService;
 use App\Service\InventoryService;
@@ -154,6 +155,7 @@ class CakeController extends AbstractController
     private function renderBuilder(CakeOrder $order, Cake $cake, bool $fullPage = false): Response
     {
         $bakery = $this->bakeryRepository->findOneBy([]);
+        $now    = new \DateTimeImmutable();
         $params = [
             'order'        => $order,
             'cake'         => $cake,
@@ -163,6 +165,9 @@ class CakeController extends AbstractController
             'toppings'     => Topping::cases(),
             'restockables' => [...Ingredient::cases(), ...FrostingFlavor::cases(), ...Topping::cases()],
             'canBake'      => $bakery && $this->inventoryService->canBake($cake, $bakery),
+            'dayEndsAt'    => $bakery?->getDayEndsAt()?->getTimestamp(),
+            'serverNow'    => $now->getTimestamp(),
+            'secondsPerDay' => Config::SECONDS_PER_DAY,
         ];
 
         try {

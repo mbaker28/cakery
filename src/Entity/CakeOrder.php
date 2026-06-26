@@ -22,7 +22,7 @@ class CakeOrder
     private ?OrderStatus $status = null;
 
     #[ORM\Column]
-    private ?int $dueDay = null;
+    private ?\DateTimeImmutable $spawnAt = null;
 
     #[ORM\Column]
     private ?float $payout = null;
@@ -75,14 +75,14 @@ class CakeOrder
         return $this;
     }
 
-    public function getDueDay(): ?int
+    public function getSpawnAt(): ?\DateTimeImmutable
     {
-        return $this->dueDay;
+        return $this->spawnAt;
     }
 
-    public function setDueDay(int $dueDay): static
+    public function setSpawnAt(\DateTimeImmutable $spawnAt): static
     {
-        $this->dueDay = $dueDay;
+        $this->spawnAt = $spawnAt;
 
         return $this;
     }

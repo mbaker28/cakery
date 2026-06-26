@@ -36,6 +36,9 @@ class Bakery
     #[ORM\Column]
     private ?int $ordersFailed = null;
 
+    #[ORM\Column(nullable: true)]
+    private ?\DateTimeImmutable $dayEndsAt = null;
+
     /**
      * @var array<string, int> $inventory
      */
@@ -146,6 +149,18 @@ class Bakery
     public function setInventory(array $inventory): static
     {
         $this->inventory = $inventory;
+
+        return $this;
+    }
+
+    public function getDayEndsAt(): ?\DateTimeImmutable
+    {
+        return $this->dayEndsAt;
+    }
+
+    public function setDayEndsAt(?\DateTimeImmutable $dayEndsAt): static
+    {
+        $this->dayEndsAt = $dayEndsAt;
 
         return $this;
     }
