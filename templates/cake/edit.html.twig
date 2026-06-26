@@ -53,7 +53,7 @@
                     <ul class="list-unstyled small">
                         {% for key, qty in bakery.inventory %}
                             <li class="d-flex justify-content-between">
-                                <span>{{ key|capitalize }}</span>
+                                <span>{{ key|replace({'frosting_': '', 'topping_': '', '_': ' '})|title }}</span>
                                 <span class="{{ qty < 3 ? 'text-danger' : 'text-muted' }}">{{ qty }}</span>
                             </li>
                         {% endfor %}
