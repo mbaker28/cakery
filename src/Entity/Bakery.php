@@ -2,7 +2,10 @@
 
 namespace App\Entity;
 
+use App\Enum\FrostingFlavor;
 use App\Enum\Ingredient;
+use App\Enum\Restockable;
+use App\Enum\Topping;
 use App\Repository\BakeryRepository;
 use Doctrine\ORM\Mapping as ORM;
 
@@ -43,12 +46,12 @@ class Bakery
         Ingredient::EGGS->value   => 2,
         Ingredient::SUGAR->value  => 2,
         Ingredient::MILK->value   => 2,
-        Ingredient::FROSTING_CHOCOLATE->value    => 2,
-        Ingredient::FROSTING_VANILLA->value      => 2,
-        Ingredient::FROSTING_CREAM_CHEESE->value => 2,
-        Ingredient::TOPPING_SPRINKLES->value        => 2,
-        Ingredient::TOPPING_CHOCOLATE_CHIPS->value  => 2,
-        Ingredient::TOPPING_STRAWBERRIES->value     => 2,
+        FrostingFlavor::FROSTING_CHOCOLATE->value    => 2,
+        FrostingFlavor::FROSTING_VANILLA->value      => 2,
+        FrostingFlavor::FROSTING_CREAM_CHEESE->value => 2,
+        Topping::TOPPING_SPRINKLES->value        => 2,
+        Topping::TOPPING_CHOCOLATE_CHIPS->value  => 2,
+        Topping::TOPPING_STRAWBERRIES->value     => 2,
     ];
 
     public function getId(): ?int
@@ -147,14 +150,14 @@ class Bakery
         return $this;
     }
 
-    public function getStock(Ingredient $ingredient): int
+    public function getStock(Restockable $item): int
     {
-        return $this->inventory[$ingredient->value];
+        return $this->inventory[$item->inventoryKey()];
     }
 
-    public function setStock(Ingredient $ingredient, int $amount): static
+    public function setStock(Restockable $item, int $amount): static
     {
-        $this->inventory[$ingredient->value] = $amount;
+        $this->inventory[$item->inventoryKey()] = $amount;
 
         return $this;
     }

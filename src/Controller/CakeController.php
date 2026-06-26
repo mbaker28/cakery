@@ -5,8 +5,10 @@ namespace App\Controller;
 use App\Entity\Cake;
 use App\Entity\CakeOrder;
 use App\Enum\CakeSize;
+use App\Enum\FrostingFlavor;
 use App\Enum\Ingredient;
 use App\Enum\OrderStatus;
+use App\Enum\Topping;
 use App\Repository\BakeryRepository;
 use App\Service\BakingService;
 use App\Service\InventoryService;
@@ -72,10 +74,10 @@ class CakeController extends AbstractController
     #[Route('/{cakeId}/frosting', name: 'cake_set_frosting', requirements: ['cakeId' => '\d+'], methods: ['POST'])]
     public function setFrosting(CakeOrder $order, int $cakeId, Request $request): Response
     {
-        $cake = $this->getCakeOr404($order, $cakeId);
-        $flavor = Ingredient::tryFrom($request->request->getString('flavor'));
+        $cake   = $this->getCakeOr404($order, $cakeId);
+        $flavor = FrostingFlavor::tryFrom($request->request->getString('flavor'));
 
-        if ($flavor !== null && $flavor->group() === 'Frostings') {
+        if ($flavor !== null) {
             $cake->setFrostingFlavor($flavor);
             $this->em->flush();
         }
@@ -86,7 +88,7 @@ class CakeController extends AbstractController
     #[Route('/{cakeId}/layers', name: 'cake_set_layers', requirements: ['cakeId' => '\d+'], methods: ['POST'])]
     public function setLayers(CakeOrder $order, int $cakeId, Request $request): Response
     {
-        $cake = $this->getCakeOr404($order, $cakeId);
+        $cake   = $this->getCakeOr404($order, $cakeId);
         $layers = $request->request->getInt('layers');
 
         if ($layers >= 1 && $layers <= 5) {
@@ -100,11 +102,8 @@ class CakeController extends AbstractController
     #[Route('/{cakeId}/topping', name: 'cake_toggle_topping', requirements: ['cakeId' => '\d+'], methods: ['POST'])]
     public function toggleTopping(CakeOrder $order, int $cakeId, Request $request): Response
     {
-        $cake = $this->getCakeOr404($order, $cakeId);
-        $topping = Ingredient::tryFrom($request->request->getString('topping'));
-        if ($topping !== null && $topping->group() !== 'Toppings') {
-            $topping = null;
-        }
+        $cake    = $this->getCakeOr404($order, $cakeId);
+        $topping = Topping::tryFrom($request->request->getString('topping'));
 
         if ($topping !== null) {
             $toppings = $cake->getToppings() ?? [];
@@ -123,7 +122,7 @@ class CakeController extends AbstractController
     #[Route('/{cakeId}/bake', name: 'cake_bake', requirements: ['cakeId' => '\d+'], methods: ['POST'])]
     public function bake(CakeOrder $order, int $cakeId): Response
     {
-        $cake = $this->getCakeOr404($order, $cakeId);
+        $cake   = $this->getCakeOr404($order, $cakeId);
         $bakery = $this->bakeryRepository->findOneBy([]);
 
         if ($bakery === null || !$this->inventoryService->canBake($cake, $bakery)) {
@@ -156,14 +155,14 @@ class CakeController extends AbstractController
     {
         $bakery = $this->bakeryRepository->findOneBy([]);
         $params = [
-            'order'       => $order,
-            'cake'        => $cake,
-            'bakery'      => $bakery,
-            'sizes'       => CakeSize::cases(),
-            'flavors'     => Ingredient::frostings(),
-            'toppings'    => Ingredient::toppings(),
-            'ingredients' => Ingredient::cases(),
-            'canBake'     => $bakery && $this->inventoryService->canBake($cake, $bakery),
+            'order'        => $order,
+            'cake'         => $cake,
+            'bakery'       => $bakery,
+            'sizes'        => CakeSize::cases(),
+            'flavors'      => FrostingFlavor::cases(),
+            'toppings'     => Topping::cases(),
+            'restockables' => [...Ingredient::cases(), ...FrostingFlavor::cases(), ...Topping::cases()],
+            'canBake'      => $bakery && $this->inventoryService->canBake($cake, $bakery),
         ];
 
         try {

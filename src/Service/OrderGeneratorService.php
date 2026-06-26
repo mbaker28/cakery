@@ -4,8 +4,9 @@ namespace App\Service;
 
 use App\Entity\CakeOrder;
 use App\Enum\CakeSize;
-use App\Enum\Ingredient;
+use App\Enum\FrostingFlavor;
 use App\Enum\OrderStatus;
+use App\Enum\Topping;
 
 class OrderGeneratorService
 {
@@ -67,7 +68,7 @@ class OrderGeneratorService
         $tier     = $this->tier($reputation);
         $size     = $this->pick(self::SIZES_BY_TIER[$tier]);
         $layers   = random_int(...self::LAYERS_BY_TIER[$tier]);
-        $frosting = $this->pick(Ingredient::frostings());
+        $frosting = $this->pick(FrostingFlavor::cases());
         $toppings = $this->randomToppings($tier);
         $dueDay   = $currentDay + random_int(...self::DAYS_TO_COMPLETE_BY_TIER[$tier]);
 
@@ -102,7 +103,7 @@ class OrderGeneratorService
 
     private function randomToppings(int $tier): array
     {
-        $all    = Ingredient::toppings();
+        $all    = Topping::cases();
         $max    = self::MAX_TOPPINGS_BY_TIER[$tier];
         $count  = random_int(0, min($max, count($all)));
 

@@ -5,8 +5,10 @@ namespace App\Controller;
 use App\Entity\Bakery;
 use App\Entity\Cake;
 use App\Entity\CakeOrder;
+use App\Enum\FrostingFlavor;
 use App\Enum\Ingredient;
 use App\Enum\OrderStatus;
+use App\Enum\Topping;
 use App\Repository\BakeryRepository;
 use App\Repository\CakeOrderRepository;
 use App\Service\InventoryService;
@@ -47,7 +49,7 @@ class GameController extends AbstractController
         return $this->render('game/index.html.twig', [
             'bakery'          => $bakery,
             'orders'          => $orders,
-            'ingredients'     => Ingredient::cases(),
+            'restockables'    => [...Ingredient::cases(), ...FrostingFlavor::cases(), ...Topping::cases()],
             'blockingOrders'  => $blockingOrders,
         ]);
     }
@@ -177,14 +179,21 @@ class GameController extends AbstractController
         $inventory    = $bakery->getInventory();
         $deficit      = 0.0;
 
-        foreach ($requirements as $ingredient => $needed) {
-            $shortfall = max(0, $needed - ($inventory[$ingredient] ?? 0));
+        foreach ($requirements as $key => $needed) {
+            $shortfall = max(0, $needed - ($inventory[$key] ?? 0));
             if ($shortfall > 0) {
-                $deficit += $shortfall * Ingredient::from($ingredient)->costPerUnit();
+                $deficit += $shortfall * $this->costForKey($key);
             }
         }
 
         return $bakery->getMoney() >= $deficit;
+    }
+
+    private function costForKey(string $key): float
+    {
+        $item = Ingredient::tryFrom($key) ?? FrostingFlavor::tryFrom($key) ?? Topping::tryFrom($key);
+
+        return $item?->costPerUnit() ?? 0.0;
     }
 
     #[Route('/shop/restock', name: 'game_restock', methods: ['POST'])]
@@ -196,13 +205,14 @@ class GameController extends AbstractController
             return $this->redirectToRoute('game_new');
         }
 
-        $ingredient = Ingredient::tryFrom($request->request->getString('ingredient'));
-        $quantity   = max(1, $request->request->getInt('quantity', 5));
-        $restocked  = false;
+        $value    = $request->request->getString('ingredient');
+        $item     = Ingredient::tryFrom($value) ?? FrostingFlavor::tryFrom($value) ?? Topping::tryFrom($value);
+        $quantity = max(1, $request->request->getInt('quantity', 5));
+        $restocked = false;
 
-        if ($ingredient !== null) {
+        if ($item !== null) {
             try {
-                $this->inventoryService->restock($ingredient, $quantity, $bakery);
+                $this->inventoryService->restock($item, $quantity, $bakery);
                 $this->em->flush();
                 $restocked = true;
             } catch (\RuntimeException) {
@@ -212,8 +222,8 @@ class GameController extends AbstractController
 
         $params = [
             'bakery'          => $bakery,
-            'ingredients'     => Ingredient::cases(),
-            'toastIngredient' => $restocked ? $ingredient : null,
+            'restockables'    => [...Ingredient::cases(), ...FrostingFlavor::cases(), ...Topping::cases()],
+            'toastIngredient' => $restocked ? $item : null,
             'toastQuantity'   => $quantity,
             'builderContext'  => null,
         ];

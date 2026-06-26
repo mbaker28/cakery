@@ -3,8 +3,8 @@
 namespace App\Tests\Service;
 
 use App\Enum\CakeSize;
-use App\Enum\Ingredient;
 use App\Enum\OrderStatus;
+use App\Enum\Topping;
 use App\Service\OrderGeneratorService;
 use PHPUnit\Framework\TestCase;
 
@@ -113,7 +113,7 @@ class OrderGeneratorServiceTest extends TestCase
 
     public function testRequiredToppingsAreValidEnumCases(): void
     {
-        $valid = Ingredient::toppings();
+        $valid = Topping::cases();
 
         for ($i = 0; $i < 20; $i++) {
             $order = $this->service->generate(80, 1);

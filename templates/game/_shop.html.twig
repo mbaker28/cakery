@@ -7,7 +7,7 @@
     {% for group in groups %}
         <h6 class="text-muted text-uppercase small fw-semibold mt-3 mb-2">{{ group }}</h6>
         <div class="row g-3 mb-2">
-            {% for ingredient in ingredients|filter(i => i.group == group) %}
+            {% for ingredient in restockables|filter(i => i.group == group) %}
                 {% set stock = bakery.inventory[ingredient.value] ?? 0 %}
                 <div class="col-6 col-md-4 col-lg-2">
                     <div class="card shadow-sm text-center">

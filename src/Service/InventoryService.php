@@ -4,7 +4,7 @@ namespace App\Service;
 
 use App\Entity\Bakery;
 use App\Entity\Cake;
-use App\Enum\Ingredient;
+use App\Enum\Restockable;
 
 class InventoryService
 {
@@ -38,11 +38,11 @@ class InventoryService
         }
 
         if ($cake->getFrostingFlavor() !== null) {
-            $requirements[$cake->getFrostingFlavor()->value] = 1;
+            $requirements[$cake->getFrostingFlavor()->inventoryKey()] = 1;
         }
 
         foreach ($cake->getToppings() ?? [] as $topping) {
-            $requirements[$topping->value] = 1;
+            $requirements[$topping->inventoryKey()] = 1;
         }
 
         return $requirements;
@@ -80,9 +80,9 @@ class InventoryService
         $bakery->setInventory($inventory);
     }
 
-    public function restock(Ingredient $ingredient, int $quantity, Bakery $bakery): void
+    public function restock(Restockable $item, int $quantity, Bakery $bakery): void
     {
-        $cost = $ingredient->costPerUnit() * $quantity;
+        $cost = $item->costPerUnit() * $quantity;
 
         if ($bakery->getMoney() < $cost) {
             throw new \RuntimeException('Insufficient funds to restock.');
@@ -91,7 +91,7 @@ class InventoryService
         $bakery->setMoney($bakery->getMoney() - $cost);
 
         $inventory = $bakery->getInventory();
-        $inventory[$ingredient->value] = ($inventory[$ingredient->value] ?? 0) + $quantity;
+        $inventory[$item->inventoryKey()] = ($inventory[$item->inventoryKey()] ?? 0) + $quantity;
         $bakery->setInventory($inventory);
     }
 }

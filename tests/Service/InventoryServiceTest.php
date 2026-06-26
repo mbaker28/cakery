@@ -5,7 +5,9 @@ namespace App\Tests\Service;
 use App\Entity\Bakery;
 use App\Entity\Cake;
 use App\Enum\CakeSize;
+use App\Enum\FrostingFlavor;
 use App\Enum\Ingredient;
+use App\Enum\Topping;
 use App\Service\InventoryService;
 use PHPUnit\Framework\TestCase;
 
@@ -70,7 +72,7 @@ class InventoryServiceTest extends TestCase
 
     public function testFrostingAddedToRequirements(): void
     {
-        $cake = $this->cake(CakeSize::CUPCAKE, 1)->setFrostingFlavor(Ingredient::FROSTING_VANILLA);
+        $cake = $this->cake(CakeSize::CUPCAKE, 1)->setFrostingFlavor(FrostingFlavor::FROSTING_VANILLA);
         $requirements = $this->service->getRequirements($cake);
 
         $this->assertArrayHasKey('frosting_vanilla', $requirements);
@@ -79,7 +81,7 @@ class InventoryServiceTest extends TestCase
 
     public function testToppingAddedToRequirements(): void
     {
-        $cake = $this->cake(CakeSize::CUPCAKE, 1)->setToppings([Ingredient::TOPPING_SPRINKLES, Ingredient::TOPPING_STRAWBERRIES]);
+        $cake = $this->cake(CakeSize::CUPCAKE, 1)->setToppings([Topping::TOPPING_SPRINKLES, Topping::TOPPING_STRAWBERRIES]);
         $requirements = $this->service->getRequirements($cake);
 
         $this->assertSame(1, $requirements['topping_sprinkles']);
@@ -88,7 +90,7 @@ class InventoryServiceTest extends TestCase
 
     public function testCanBakeChecksFrostingStock(): void
     {
-        $cake = $this->cake(CakeSize::CUPCAKE, 1)->setFrostingFlavor(Ingredient::FROSTING_VANILLA);
+        $cake = $this->cake(CakeSize::CUPCAKE, 1)->setFrostingFlavor(FrostingFlavor::FROSTING_VANILLA);
         $this->bakery->setInventory([
             'flour' => 20, 'butter' => 20, 'eggs' => 20, 'sugar' => 20, 'milk' => 20,
             'frosting_vanilla' => 0,

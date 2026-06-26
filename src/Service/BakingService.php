@@ -4,17 +4,18 @@ namespace App\Service;
 
 use App\Entity\Cake;
 use App\Enum\CakeSize;
-use App\Enum\Ingredient;
+use App\Enum\FrostingFlavor;
+use App\Enum\Topping;
 
 class BakingService
 {
     private const COMBOS = [
-        [Ingredient::TOPPING_STRAWBERRIES,    Ingredient::FROSTING_CREAM_CHEESE,   20.0],
-        [Ingredient::TOPPING_CHOCOLATE_CHIPS, Ingredient::FROSTING_CHOCOLATE,      15.0],
-        [Ingredient::TOPPING_SPRINKLES,       Ingredient::FROSTING_VANILLA,        10.0],
-        [Ingredient::TOPPING_CHOCOLATE_CHIPS, Ingredient::FROSTING_VANILLA,         8.0],
-        [Ingredient::TOPPING_STRAWBERRIES,    Ingredient::TOPPING_SPRINKLES,       -8.0],
-        [Ingredient::TOPPING_CHOCOLATE_CHIPS, Ingredient::FROSTING_CREAM_CHEESE,   -5.0],
+        [Topping::TOPPING_STRAWBERRIES,    FrostingFlavor::FROSTING_CREAM_CHEESE,  20.0],
+        [Topping::TOPPING_CHOCOLATE_CHIPS, FrostingFlavor::FROSTING_CHOCOLATE,     15.0],
+        [Topping::TOPPING_SPRINKLES,       FrostingFlavor::FROSTING_VANILLA,       10.0],
+        [Topping::TOPPING_CHOCOLATE_CHIPS, FrostingFlavor::FROSTING_VANILLA,        8.0],
+        [Topping::TOPPING_STRAWBERRIES,    Topping::TOPPING_SPRINKLES,             -8.0],
+        [Topping::TOPPING_CHOCOLATE_CHIPS, FrostingFlavor::FROSTING_CREAM_CHEESE,  -5.0],
     ];
 
     public function bake(Cake $cake): float
