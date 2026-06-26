@@ -113,6 +113,16 @@ class GameController extends AbstractController
         return $this->redirectToRoute('game_index');
     }
 
+    #[Route('/restart', name: 'game_restart', methods: ['POST'])]
+    public function restart(): Response
+    {
+        $this->em->createQuery('DELETE FROM App\Entity\Cake c')->execute();
+        $this->em->createQuery('DELETE FROM App\Entity\CakeOrder co')->execute();
+        $this->em->createQuery('DELETE FROM App\Entity\Bakery b')->execute();
+
+        return $this->redirectToRoute('game_new');
+    }
+
     #[Route('/shop/restock', name: 'game_restock', methods: ['POST'])]
     public function restock(Request $request): Response
     {
@@ -124,17 +134,24 @@ class GameController extends AbstractController
 
         $ingredient = Ingredient::tryFrom($request->request->getString('ingredient'));
         $quantity   = max(1, $request->request->getInt('quantity', 5));
+        $restocked  = false;
 
         if ($ingredient !== null) {
             try {
                 $this->inventoryService->restock($ingredient, $quantity, $bakery);
                 $this->em->flush();
+                $restocked = true;
             } catch (\RuntimeException) {
                 // Not enough money — silently ignore, UI already shows cost
             }
         }
 
-        $params = ['bakery' => $bakery, 'ingredients' => Ingredient::cases()];
+        $params = [
+            'bakery'      => $bakery,
+            'ingredients' => Ingredient::cases(),
+            'toastIngredient' => $restocked ? $ingredient : null,
+            'toastQuantity'   => $quantity,
+        ];
 
         return new \Symfony\Component\HttpFoundation\Response(
             $this->renderView('game/_restock.stream.html.twig', $params),

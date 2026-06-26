@@ -6,10 +6,16 @@
     <nav class="navbar navbar-dark bg-dark">
         <div class="container">
             <span class="navbar-brand mb-0 h1">🎂 {{ bakery.name }}</span>
-            <div id="navbar-stats" class="d-flex gap-4 text-white small align-items-center">
-                <span>💰 ${{ bakery.money|number_format(2) }}</span>
-                <span>⭐ {{ bakery.reputation }}/100</span>
-                <span>📅 Day {{ bakery.day }}</span>
+            <div class="d-flex align-items-center gap-4">
+                <div id="navbar-stats" class="d-flex gap-4 text-white small align-items-center">
+                    <span>💰 ${{ bakery.money|number_format(2) }}</span>
+                    <span>⭐ {{ bakery.reputation }}/100</span>
+                    <span>📅 Day {{ bakery.day }}</span>
+                </div>
+                <form method="post" action="{{ path('game_restart') }}"
+                      onsubmit="return confirm('Start a new game? Your current progress will be lost.')">
+                    <button class="btn btn-outline-danger btn-sm">New Game</button>
+                </form>
             </div>
         </div>
     </nav>

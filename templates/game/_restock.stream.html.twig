@@ -12,3 +12,17 @@
         </div>
     </template>
 </turbo-stream>
+{% if toastIngredient %}
+<turbo-stream action="append" target="toast-container">
+    <template>
+        <div class="toast align-items-center text-bg-success border-0" role="alert" data-bs-autohide="true" data-bs-delay="4000">
+            <div class="d-flex">
+                <div class="toast-body fw-semibold">
+                    Restocked {{ toastQuantity }}× {{ toastIngredient.label }} for ${{ (toastIngredient.costPerUnit * toastQuantity)|number_format(2) }}.
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+            </div>
+        </div>
+    </template>
+</turbo-stream>
+{% endif %}
