@@ -19,7 +19,7 @@ class OrderService
         'topping' => 10.0, // per missing topping
     ];
 
-    public function fulfill(CakeOrder $order, Bakery $bakery): void
+    public function fulfill(CakeOrder $order, Bakery $bakery): float
     {
         $cakes = $order->getCakes();
 
@@ -33,16 +33,19 @@ class OrderService
 
         if ($avgQuality < self::MIN_QUALITY) {
             $this->fail($order, $bakery);
-            return;
+            return 0.0;
         }
 
         $scale = $avgQuality / 100.0;
+        $earned = $order->getPayout() * $scale;
 
-        $bakery->setMoney($bakery->getMoney() + ($order->getPayout() * $scale));
+        $bakery->setMoney($bakery->getMoney() + $earned);
         $bakery->setReputation(min(100, $bakery->getReputation() + (int) round($order->getHappinessBonus() * $scale)));
         $bakery->setOrdersCompleted($bakery->getOrdersCompleted() + 1);
 
         $order->setStatus(OrderStatus::FULFILLED);
+
+        return $earned;
     }
 
     public function fail(CakeOrder $order, Bakery $bakery): void

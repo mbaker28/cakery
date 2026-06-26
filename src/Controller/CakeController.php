@@ -132,9 +132,22 @@ class CakeController extends AbstractController
 
         $this->inventoryService->deduct($cake, $bakery);
         $this->bakingService->bake($cake);
-        $this->orderService->fulfill($order, $bakery);
+        $earned = $this->orderService->fulfill($order, $bakery);
 
         $this->em->flush();
+
+        if ($order->getStatus() === OrderStatus::FULFILLED) {
+            $this->addFlash('success', sprintf(
+                '%s loved it! You earned $%.2f.',
+                $order->getCustomerName(),
+                $earned
+            ));
+        } else {
+            $this->addFlash('danger', sprintf(
+                "%s's order failed — the cake quality was too low.",
+                $order->getCustomerName()
+            ));
+        }
 
         return $this->redirectToRoute('game_index');
     }

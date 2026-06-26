@@ -5,6 +5,10 @@
  * which should already be in your base.html.twig.
  */
 import './styles/app.css';
-import 'bootstrap';
+import { Toast } from 'bootstrap';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import '@hotwired/turbo';
+
+document.addEventListener('turbo:load', () => {
+    document.querySelectorAll('.toast').forEach(el => new Toast(el).show());
+});
