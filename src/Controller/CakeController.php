@@ -36,6 +36,12 @@ class CakeController extends AbstractController
             return $this->redirectToRoute('game_index');
         }
 
+        // If already in-progress, redirect to the existing unbaked cake rather than creating another
+        $existingCake = $order->getCakes()->findFirst(fn($_, $c) => !$c->isBaked());
+        if ($existingCake !== null) {
+            return $this->redirectToRoute('cake_edit', ['id' => $order->getId(), 'cakeId' => $existingCake->getId()]);
+        }
+
         $cake = (new Cake())->setCakeOrder($order);
         $this->em->persist($cake);
 
@@ -49,21 +55,10 @@ class CakeController extends AbstractController
     #[Route('/{cakeId}/edit', name: 'cake_edit', requirements: ['cakeId' => '\d+'], methods: ['GET'])]
     public function edit(CakeOrder $order, int $cakeId): Response
     {
-        $cake = $this->getCakeOr404($order, $cakeId);
-        $bakery = $this->bakeryRepository->findOneBy([]);
-
-        return $this->render('cake/edit.html.twig', [
-            'order'   => $order,
-            'cake'    => $cake,
-            'bakery'  => $bakery,
-            'sizes'   => CakeSize::cases(),
-            'flavors' => FrostingFlavor::cases(),
-            'toppings' => Topping::cases(),
-            'canBake' => $bakery && $this->inventoryService->canBake($cake, $bakery),
-        ]);
+        return $this->renderBuilder($order, $this->getCakeOr404($order, $cakeId), fullPage: true);
     }
 
-    #[Route('/{cakeId}/size', name: 'cake_set_size', methods: ['POST'])]
+    #[Route('/{cakeId}/size', name: 'cake_set_size', requirements: ['cakeId' => '\d+'], methods: ['POST'])]
     public function setSize(CakeOrder $order, int $cakeId, Request $request): Response
     {
         $cake = $this->getCakeOr404($order, $cakeId);
@@ -74,10 +69,10 @@ class CakeController extends AbstractController
             $this->em->flush();
         }
 
-        return $this->redirectToRoute('cake_edit', ['id' => $order->getId(), 'cakeId' => $cakeId]);
+        return $this->renderBuilder($order, $cake);
     }
 
-    #[Route('/{cakeId}/frosting', name: 'cake_set_frosting', methods: ['POST'])]
+    #[Route('/{cakeId}/frosting', name: 'cake_set_frosting', requirements: ['cakeId' => '\d+'], methods: ['POST'])]
     public function setFrosting(CakeOrder $order, int $cakeId, Request $request): Response
     {
         $cake = $this->getCakeOr404($order, $cakeId);
@@ -88,10 +83,10 @@ class CakeController extends AbstractController
             $this->em->flush();
         }
 
-        return $this->redirectToRoute('cake_edit', ['id' => $order->getId(), 'cakeId' => $cakeId]);
+        return $this->renderBuilder($order, $cake);
     }
 
-    #[Route('/{cakeId}/layers', name: 'cake_set_layers', methods: ['POST'])]
+    #[Route('/{cakeId}/layers', name: 'cake_set_layers', requirements: ['cakeId' => '\d+'], methods: ['POST'])]
     public function setLayers(CakeOrder $order, int $cakeId, Request $request): Response
     {
         $cake = $this->getCakeOr404($order, $cakeId);
@@ -102,10 +97,10 @@ class CakeController extends AbstractController
             $this->em->flush();
         }
 
-        return $this->redirectToRoute('cake_edit', ['id' => $order->getId(), 'cakeId' => $cakeId]);
+        return $this->renderBuilder($order, $cake);
     }
 
-    #[Route('/{cakeId}/topping', name: 'cake_toggle_topping', methods: ['POST'])]
+    #[Route('/{cakeId}/topping', name: 'cake_toggle_topping', requirements: ['cakeId' => '\d+'], methods: ['POST'])]
     public function toggleTopping(CakeOrder $order, int $cakeId, Request $request): Response
     {
         $cake = $this->getCakeOr404($order, $cakeId);
@@ -122,17 +117,17 @@ class CakeController extends AbstractController
             $this->em->flush();
         }
 
-        return $this->redirectToRoute('cake_edit', ['id' => $order->getId(), 'cakeId' => $cakeId]);
+        return $this->renderBuilder($order, $cake);
     }
 
-    #[Route('/{cakeId}/bake', name: 'cake_bake', methods: ['POST'])]
+    #[Route('/{cakeId}/bake', name: 'cake_bake', requirements: ['cakeId' => '\d+'], methods: ['POST'])]
     public function bake(CakeOrder $order, int $cakeId): Response
     {
         $cake = $this->getCakeOr404($order, $cakeId);
         $bakery = $this->bakeryRepository->findOneBy([]);
 
         if ($bakery === null || !$this->inventoryService->canBake($cake, $bakery)) {
-            return $this->redirectToRoute('cake_edit', ['id' => $order->getId(), 'cakeId' => $cakeId]);
+            return $this->renderBuilder($order, $cake);
         }
 
         $this->inventoryService->deduct($cake, $bakery);
@@ -142,6 +137,24 @@ class CakeController extends AbstractController
         $this->em->flush();
 
         return $this->redirectToRoute('game_index');
+    }
+
+    private function renderBuilder(CakeOrder $order, Cake $cake, bool $fullPage = false): Response
+    {
+        $bakery = $this->bakeryRepository->findOneBy([]);
+        $params = [
+            'order'    => $order,
+            'cake'     => $cake,
+            'bakery'   => $bakery,
+            'sizes'    => CakeSize::cases(),
+            'flavors'  => FrostingFlavor::cases(),
+            'toppings' => Topping::cases(),
+            'canBake'  => $bakery && $this->inventoryService->canBake($cake, $bakery),
+        ];
+
+        $template = $fullPage ? 'cake/edit.html.twig' : 'cake/_builder.html.twig';
+
+        return $this->render($template, $params);
     }
 
     private function getCakeOr404(CakeOrder $order, int $cakeId): Cake

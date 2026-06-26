@@ -3,9 +3,11 @@
 namespace App\Controller;
 
 use App\Entity\Bakery;
+use App\Enum\Ingredient;
 use App\Enum\OrderStatus;
 use App\Repository\BakeryRepository;
 use App\Repository\CakeOrderRepository;
+use App\Service\InventoryService;
 use App\Service\OrderGeneratorService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -19,6 +21,7 @@ class GameController extends AbstractController
         private readonly BakeryRepository $bakeryRepository,
         private readonly CakeOrderRepository $cakeOrderRepository,
         private readonly OrderGeneratorService $orderGeneratorService,
+        private readonly InventoryService $inventoryService,
         private readonly EntityManagerInterface $em,
     ) {}
 
@@ -34,8 +37,9 @@ class GameController extends AbstractController
         $orders = $this->cakeOrderRepository->findActiveOrders();
 
         return $this->render('game/index.html.twig', [
-            'bakery' => $bakery,
-            'orders' => $orders,
+            'bakery'      => $bakery,
+            'orders'      => $orders,
+            'ingredients' => Ingredient::cases(),
         ]);
     }
 
@@ -105,6 +109,30 @@ class GameController extends AbstractController
         }
 
         $this->em->flush();
+
+        return $this->redirectToRoute('game_index');
+    }
+
+    #[Route('/shop/restock', name: 'game_restock', methods: ['POST'])]
+    public function restock(Request $request): Response
+    {
+        $bakery = $this->bakeryRepository->findOneBy([]);
+
+        if ($bakery === null) {
+            return $this->redirectToRoute('game_new');
+        }
+
+        $ingredient = Ingredient::tryFrom($request->request->getString('ingredient'));
+        $quantity   = max(1, $request->request->getInt('quantity', 5));
+
+        if ($ingredient !== null) {
+            try {
+                $this->inventoryService->restock($ingredient, $quantity, $bakery);
+                $this->em->flush();
+            } catch (\RuntimeException) {
+                // Not enough money — silently ignore, UI already shows cost
+            }
+        }
 
         return $this->redirectToRoute('game_index');
     }

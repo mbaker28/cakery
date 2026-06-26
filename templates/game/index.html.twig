@@ -49,9 +49,16 @@
                                 </ul>
                                 <div class="d-flex justify-content-between align-items-center">
                                     <span class="text-success fw-semibold">${{ order.payout|number_format(2) }}</span>
-                                    <form method="post" action="{{ path('cake_build', {id: order.id}) }}">
-                                        <button class="btn btn-primary btn-sm">Bake</button>
-                                    </form>
+                                    {% if order.status.value == 'in_progress' %}
+                                        {% set activeCake = order.cakes.first %}
+                                        <form method="post" action="{{ path('cake_build', {id: order.id}) }}" data-turbo-frame="_top">
+                                            <button class="btn btn-warning btn-sm">Continue →</button>
+                                        </form>
+                                    {% else %}
+                                        <form method="post" action="{{ path('cake_build', {id: order.id}) }}" data-turbo-frame="_top">
+                                            <button class="btn btn-primary btn-sm">Bake</button>
+                                        </form>
+                                    {% endif %}
                                 </div>
                             </div>
                         </div>
@@ -60,4 +67,30 @@
             </div>
         {% endif %}
     </turbo-frame>
+
+    <hr class="my-4">
+
+    <h2 class="h4 mb-3">Pantry & Shop</h2>
+    <div class="row g-3">
+        {% for ingredient in ingredients %}
+            {% set stock = bakery.inventory[ingredient.value] ?? 0 %}
+            <div class="col-md-4 col-lg-2">
+                <div class="card shadow-sm text-center">
+                    <div class="card-body py-3">
+                        <div class="fw-semibold">{{ ingredient.label }}</div>
+                        <div class="display-6 my-1 {{ stock < 3 ? 'text-danger' : 'text-secondary' }}">{{ stock }}</div>
+                        <div class="text-muted small mb-2">${{ ingredient.costPerUnit|number_format(2) }}/unit</div>
+                        <form method="post" action="{{ path('game_restock') }}">
+                            <input type="hidden" name="ingredient" value="{{ ingredient.value }}">
+                            <input type="hidden" name="quantity" value="5">
+                            <button class="btn btn-outline-primary btn-sm w-100"
+                                {{ bakery.money < ingredient.costPerUnit * 5 ? 'disabled' : '' }}>
+                                +5 (${{ (ingredient.costPerUnit * 5)|number_format(2) }})
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
 {% endblock %}

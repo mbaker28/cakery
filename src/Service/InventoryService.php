@@ -26,6 +26,10 @@ class InventoryService
     /** @return array<string, int> */
     public function getRequirements(Cake $cake): array
     {
+        if ($cake->getSize() === null || $cake->getLayers() === null) {
+            throw new \LogicException('Cannot calculate requirements for a cake without size and layers.');
+        }
+
         $multiplier = self::SIZE_MULTIPLIER[$cake->getSize()->value] * $cake->getLayers();
 
         $requirements = [];
@@ -38,6 +42,10 @@ class InventoryService
 
     public function canBake(Cake $cake, Bakery $bakery): bool
     {
+        if ($cake->getSize() === null || $cake->getLayers() === null) {
+            return false;
+        }
+
         $inventory = $bakery->getInventory();
 
         foreach ($this->getRequirements($cake) as $ingredient => $needed) {
