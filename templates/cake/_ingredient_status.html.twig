@@ -1,0 +1,33 @@
+<div id="ingredient-status">
+    <div class="mb-4">
+        <label class="form-label fw-semibold">Ingredients needed</label>
+        {% if requirements %}
+            <ul class="list-unstyled small mb-0">
+                {% for key, needed in requirements %}
+                    {% set available = bakery.inventory[key] ?? 0 %}
+                    <li class="d-flex justify-content-between py-1 border-bottom">
+                        <span>{{ key|capitalize }}</span>
+                        <span class="{{ available >= needed ? 'text-success' : 'text-danger' }} fw-semibold">
+                            {{ needed }} needed &middot; {{ available }} in stock
+                        </span>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p class="text-muted small mb-0">Select a size and layer count to see requirements.</p>
+        {% endif %}
+    </div>
+
+    <form method="post" action="{{ path('cake_bake', {id: order.id, cakeId: cake.id}) }}" data-turbo-frame="_top">
+        <button
+            class="btn btn-success w-100"
+            {{ not canBake or not cake.size or not cake.frostingFlavor or not cake.layers ? 'disabled' : '' }}
+        >
+            🔥 Bake & Submit
+        </button>
+    </form>
+
+    {% if not canBake %}
+        <p class="text-danger small mt-2 mb-0">Not enough ingredients.</p>
+    {% endif %}
+</div>

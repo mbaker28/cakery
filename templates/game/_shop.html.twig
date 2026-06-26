@@ -15,6 +15,10 @@
                         <form method="post" action="{{ path('game_restock') }}">
                             <input type="hidden" name="ingredient" value="{{ ingredient.value }}">
                             <input type="hidden" name="quantity" value="5">
+                            {% if orderId is defined and orderId %}
+                                <input type="hidden" name="order_id" value="{{ orderId }}">
+                                <input type="hidden" name="cake_id" value="{{ cakeId }}">
+                            {% endif %}
                             <button class="btn btn-outline-primary btn-sm w-100"
                                 {{ bakery.money < ingredient.costPerUnit * 5 ? 'disabled' : '' }}>
                                 +5 (${{ (ingredient.costPerUnit * 5)|number_format(2) }})

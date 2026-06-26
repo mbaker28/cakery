@@ -6,7 +6,7 @@
     <nav class="navbar navbar-dark bg-dark">
         <div class="container">
             <a class="navbar-brand" href="{{ path('game_index') }}">🎂 Back to Orders</a>
-            <div class="d-flex gap-4 text-white small align-items-center">
+            <div id="navbar-stats" class="d-flex gap-4 text-white small align-items-center">
                 <span>💰 ${{ bakery.money|number_format(2) }}</span>
                 <span>⭐ {{ bakery.reputation }}/100</span>
                 <span>📅 Day {{ bakery.day }}</span>
@@ -63,4 +63,6 @@
         </div>
 
     </div>
+
+    {{ include('game/_shop.html.twig', {orderId: order.id, cakeId: cake.id}) }}
 {% endblock %}

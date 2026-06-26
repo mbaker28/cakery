@@ -209,11 +209,34 @@ class GameController extends AbstractController
         }
 
         $params = [
-            'bakery'      => $bakery,
-            'ingredients' => Ingredient::cases(),
+            'bakery'          => $bakery,
+            'ingredients'     => Ingredient::cases(),
             'toastIngredient' => $restocked ? $ingredient : null,
             'toastQuantity'   => $quantity,
+            'builderContext'  => null,
         ];
+
+        $orderId = $request->request->getInt('order_id');
+        $cakeId  = $request->request->getInt('cake_id');
+
+        if ($restocked && $orderId && $cakeId) {
+            $order = $this->cakeOrderRepository->find($orderId);
+            $cake  = $order?->getCake();
+            if ($cake !== null && $cake->getId() === $cakeId) {
+                try {
+                    $requirements = $this->inventoryService->getRequirements($cake);
+                } catch (\LogicException) {
+                    $requirements = null;
+                }
+                $params['builderContext'] = [
+                    'order'        => $order,
+                    'cake'         => $cake,
+                    'bakery'       => $bakery,
+                    'requirements' => $requirements,
+                    'canBake'      => $this->inventoryService->canBake($cake, $bakery),
+                ];
+            }
+        }
 
         return new \Symfony\Component\HttpFoundation\Response(
             $this->renderView('game/_restock.stream.html.twig', $params),

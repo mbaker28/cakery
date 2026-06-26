@@ -12,6 +12,13 @@
         </div>
     </template>
 </turbo-stream>
+{% if builderContext %}
+<turbo-stream action="replace" target="ingredient-status">
+    <template>
+        {{ include('cake/_ingredient_status.html.twig', builderContext) }}
+    </template>
+</turbo-stream>
+{% endif %}
 {% if toastIngredient %}
 <turbo-stream action="append" target="toast-container">
     <template>

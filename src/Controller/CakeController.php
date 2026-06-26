@@ -6,6 +6,7 @@ use App\Entity\Cake;
 use App\Entity\CakeOrder;
 use App\Enum\CakeSize;
 use App\Enum\FrostingFlavor;
+use App\Enum\Ingredient;
 use App\Enum\OrderStatus;
 use App\Enum\Topping;
 use App\Repository\BakeryRepository;
@@ -154,13 +155,14 @@ class CakeController extends AbstractController
     {
         $bakery = $this->bakeryRepository->findOneBy([]);
         $params = [
-            'order'    => $order,
-            'cake'     => $cake,
-            'bakery'   => $bakery,
-            'sizes'    => CakeSize::cases(),
-            'flavors'  => FrostingFlavor::cases(),
-            'toppings' => Topping::cases(),
-            'canBake'  => $bakery && $this->inventoryService->canBake($cake, $bakery),
+            'order'       => $order,
+            'cake'        => $cake,
+            'bakery'      => $bakery,
+            'sizes'       => CakeSize::cases(),
+            'flavors'     => FrostingFlavor::cases(),
+            'toppings'    => Topping::cases(),
+            'ingredients' => Ingredient::cases(),
+            'canBake'     => $bakery && $this->inventoryService->canBake($cake, $bakery),
         ];
 
         try {
