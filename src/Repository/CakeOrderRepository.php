@@ -28,6 +28,20 @@ class CakeOrderRepository extends ServiceEntityRepository
             ->getResult();
     }
 
+    /** Orders that must be fulfilled before the day can advance (due today or overdue). */
+    /** @return CakeOrder[] */
+    public function findBlockingOrders(int $currentDay): array
+    {
+        return $this->createQueryBuilder('o')
+            ->andWhere('o.status IN (:statuses)')
+            ->andWhere('o.dueDay <= :day')
+            ->setParameter('statuses', [OrderStatus::PENDING, OrderStatus::IN_PROGRESS])
+            ->setParameter('day', $currentDay)
+            ->orderBy('o.dueDay', 'ASC')
+            ->getQuery()
+            ->getResult();
+    }
+
     //    /**
     //     * @return Order[] Returns an array of Order objects
     //     */

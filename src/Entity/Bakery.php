@@ -38,11 +38,11 @@ class Bakery
      */
     #[ORM\Column]
     private array $inventory = [
-        Ingredient::FLOUR->value => 10,
-        Ingredient::BUTTER->value => 10,
-        Ingredient::EGGS->value => 12,
-        Ingredient::SUGAR->value => 5,
-        Ingredient::MILK->value => 4,
+        Ingredient::FLOUR->value  => 2,
+        Ingredient::BUTTER->value => 2,
+        Ingredient::EGGS->value   => 2,
+        Ingredient::SUGAR->value  => 2,
+        Ingredient::MILK->value   => 2,
     ];
 
     public function getId(): ?int

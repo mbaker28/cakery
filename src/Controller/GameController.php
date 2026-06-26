@@ -3,6 +3,8 @@
 namespace App\Controller;
 
 use App\Entity\Bakery;
+use App\Entity\Cake;
+use App\Entity\CakeOrder;
 use App\Enum\Ingredient;
 use App\Enum\OrderStatus;
 use App\Repository\BakeryRepository;
@@ -34,12 +36,19 @@ class GameController extends AbstractController
             return $this->redirectToRoute('game_new');
         }
 
+        $blockingOrders = $this->cakeOrderRepository->findBlockingOrders($bakery->getDay());
+
+        if ($this->isGameOver($blockingOrders, $bakery)) {
+            return $this->redirectToRoute('game_over');
+        }
+
         $orders = $this->cakeOrderRepository->findActiveOrders();
 
         return $this->render('game/index.html.twig', [
-            'bakery'      => $bakery,
-            'orders'      => $orders,
-            'ingredients' => Ingredient::cases(),
+            'bakery'          => $bakery,
+            'orders'          => $orders,
+            'ingredients'     => Ingredient::cases(),
+            'blockingOrders'  => $blockingOrders,
         ]);
     }
 
@@ -62,7 +71,7 @@ class GameController extends AbstractController
 
         $bakery = (new Bakery())
             ->setName($request->request->getString('name', 'My Bakery'))
-            ->setMoney(200.0)
+            ->setMoney(50.0)
             ->setReputation(20)
             ->setDay(1)
             ->setOrdersCompleted(0)
@@ -89,16 +98,18 @@ class GameController extends AbstractController
             return $this->redirectToRoute('game_new');
         }
 
-        $bakery->setDay($bakery->getDay() + 1);
+        $blockingOrders = $this->cakeOrderRepository->findBlockingOrders($bakery->getDay());
 
-        // Expire overdue orders
-        foreach ($this->cakeOrderRepository->findActiveOrders() as $order) {
-            if ($order->getDueDay() < $bakery->getDay()) {
-                $order->setStatus(OrderStatus::FAILED);
-                $bakery->setReputation(max(0, $bakery->getReputation() - 10));
-                $bakery->setOrdersFailed($bakery->getOrdersFailed() + 1);
+        if (!empty($blockingOrders)) {
+            if ($this->isGameOver($blockingOrders, $bakery)) {
+                return $this->redirectToRoute('game_over');
             }
+
+            $this->addFlash('danger', 'You must fulfill all orders due today before advancing.');
+            return $this->redirectToRoute('game_index');
         }
+
+        $bakery->setDay($bakery->getDay() + 1);
 
         // Top up to max orders
         $activeCount = count($this->cakeOrderRepository->findActiveOrders());
@@ -113,6 +124,16 @@ class GameController extends AbstractController
         return $this->redirectToRoute('game_index');
     }
 
+    #[Route('/game-over', name: 'game_over', methods: ['GET'])]
+    public function gameOver(): Response
+    {
+        $bakery = $this->bakeryRepository->findOneBy([]);
+
+        return $this->render('game/game_over.html.twig', [
+            'bakery' => $bakery,
+        ]);
+    }
+
     #[Route('/restart', name: 'game_restart', methods: ['POST'])]
     public function restart(): Response
     {
@@ -121,6 +142,47 @@ class GameController extends AbstractController
         $this->em->createQuery('DELETE FROM App\Entity\Bakery b')->execute();
 
         return $this->redirectToRoute('game_new');
+    }
+
+    /** @param CakeOrder[] $blockingOrders */
+    private function isGameOver(array $blockingOrders, Bakery $bakery): bool
+    {
+        if (empty($blockingOrders)) {
+            return false;
+        }
+
+        foreach ($blockingOrders as $order) {
+            if ($this->canFulfillOrder($order, $bakery)) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    private function canFulfillOrder(CakeOrder $order, Bakery $bakery): bool
+    {
+        $fakeCake = (new Cake())
+            ->setSize($order->getRequiredSize())
+            ->setLayers($order->getRequiredLayers());
+
+        if ($this->inventoryService->canBake($fakeCake, $bakery)) {
+            return true;
+        }
+
+        // Check if the player can afford to buy the ingredient deficit
+        $requirements = $this->inventoryService->getRequirements($fakeCake);
+        $inventory    = $bakery->getInventory();
+        $deficit      = 0.0;
+
+        foreach ($requirements as $ingredient => $needed) {
+            $shortfall = max(0, $needed - ($inventory[$ingredient] ?? 0));
+            if ($shortfall > 0) {
+                $deficit += $shortfall * Ingredient::from($ingredient)->costPerUnit();
+            }
+        }
+
+        return $bakery->getMoney() >= $deficit;
     }
 
     #[Route('/shop/restock', name: 'game_restock', methods: ['POST'])]

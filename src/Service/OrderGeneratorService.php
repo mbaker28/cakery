@@ -36,9 +36,9 @@ class OrderGeneratorService
     ];
 
     private const DAYS_TO_COMPLETE_BY_TIER = [
-        1 => [4, 6],
-        2 => [3, 5],
-        3 => [2, 3],
+        1 => [2, 3],
+        2 => [1, 2],
+        3 => [1, 1],
     ];
 
     private const BASE_PAYOUT_BY_SIZE = [
