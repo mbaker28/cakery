@@ -24,6 +24,9 @@ class CakeOrder
     #[ORM\Column]
     private ?\DateTimeImmutable $spawnAt = null;
 
+    #[ORM\Column(nullable: true)]
+    private ?\DateTimeImmutable $failsAt = null;
+
     #[ORM\Column]
     private ?float $payout = null;
 
@@ -83,6 +86,18 @@ class CakeOrder
     public function setSpawnAt(\DateTimeImmutable $spawnAt): static
     {
         $this->spawnAt = $spawnAt;
+
+        return $this;
+    }
+
+    public function getFailsAt(): ?\DateTimeImmutable
+    {
+        return $this->failsAt;
+    }
+
+    public function setFailsAt(?\DateTimeImmutable $failsAt): static
+    {
+        $this->failsAt = $failsAt;
 
         return $this;
     }

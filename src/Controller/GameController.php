@@ -41,40 +41,21 @@ class GameController extends AbstractController
             return $this->redirectToRoute('game_new');
         }
 
-        // If the day timer has expired (player was away / tab was closed), lock orders now
-        if ($this->isDayExpired($bakery)) {
-            $this->failDayOrders($bakery);
-            $this->em->flush();
-        }
+        $now    = new \DateTimeImmutable();
+        $orders = $this->cakeOrderRepository->findActiveOrders();
 
-        // Ensure day timer is set for new/migrated games
-        if ($bakery->getDayEndsAt() === null) {
-            $bakery->setDayEndsAt($this->newDayEndsAt());
-            $this->em->flush();
-        }
-
-        $now        = new \DateTimeImmutable();
-        $dayExpired = $this->isDayExpired($bakery);
-
-        $blockingOrders = $dayExpired
-            ? []
-            : $this->cakeOrderRepository->findBlockingOrders($now);
+        $blockingOrders = $this->cakeOrderRepository->findBlockingOrders($now);
 
         if ($this->isGameOver($blockingOrders, $bakery)) {
             return $this->redirectToRoute('game_over');
         }
 
-        $orders = $this->cakeOrderRepository->findActiveOrders();
-
         return $this->render('game/index.html.twig', [
-            'bakery'         => $bakery,
-            'orders'         => $orders,
-            'restockables'   => [...Ingredient::cases(), ...FrostingFlavor::cases(), ...Topping::cases()],
+            'bakery'        => $bakery,
+            'orders'        => $orders,
+            'restockables'  => [...Ingredient::cases(), ...FrostingFlavor::cases(), ...Topping::cases()],
             'blockingOrders' => $blockingOrders,
-            'dayExpired'     => $dayExpired,
-            'dayEndsAt'      => $bakery->getDayEndsAt()->getTimestamp(),
-            'secondsPerDay'  => Config::SECONDS_PER_DAY,
-            'serverNow'      => $now->getTimestamp(),
+            'serverNow'     => $now->getTimestamp(),
         ]);
     }
 
@@ -95,19 +76,16 @@ class GameController extends AbstractController
             return $this->redirectToRoute('game_index');
         }
 
-        $dayEndsAt = $this->newDayEndsAt();
-
         $bakery = (new Bakery())
             ->setName($request->request->getString('name', 'My Bakery'))
             ->setMoney(50.0)
             ->setReputation(20)
             ->setDay(1)
             ->setOrdersCompleted(0)
-            ->setOrdersFailed(0)
-            ->setDayEndsAt($dayEndsAt);
+            ->setOrdersFailed(0);
 
         $this->em->persist($bakery);
-        $this->spawnOrdersForDay($bakery, $dayEndsAt);
+        $this->spawnOrdersForDay($bakery);
         $this->em->flush();
 
         return $this->redirectToRoute('game_index');
@@ -122,36 +100,11 @@ class GameController extends AbstractController
             return $this->redirectToRoute('game_new');
         }
 
-        $now = new \DateTimeImmutable();
+        $activeOrders = $this->cakeOrderRepository->findActiveOrders();
 
-        // Day already expired — orders are already failed; just start the new day
-        if ($this->isDayExpired($bakery)) {
-            $this->failDayOrders($bakery);
-            $this->startNewDay($bakery);
-            $this->em->flush();
-
-            $blockingOrders = $this->cakeOrderRepository->findBlockingOrders($now);
-            if ($this->isGameOver($blockingOrders, $bakery)) {
-                return $this->redirectToRoute('game_over');
-            }
-
+        if (!empty($activeOrders)) {
+            $this->addFlash('danger', 'You must complete all orders before advancing the day.');
             return $this->redirectToRoute('game_index');
-        }
-
-        $blockingOrders = $this->cakeOrderRepository->findBlockingOrders($now);
-
-        if (!empty($blockingOrders)) {
-            if ($this->isGameOver($blockingOrders, $bakery)) {
-                return $this->redirectToRoute('game_over');
-            }
-
-            $this->addFlash('danger', 'You must fulfil all visible orders before advancing the day.');
-            return $this->redirectToRoute('game_index');
-        }
-
-        // Remove unspawned orders silently (player advanced early; no penalty)
-        foreach ($this->cakeOrderRepository->findUnspawned($now) as $order) {
-            $this->em->remove($order);
         }
 
         $this->startNewDay($bakery);
@@ -160,21 +113,19 @@ class GameController extends AbstractController
         return $this->redirectToRoute('game_index');
     }
 
-    #[Route('/day-expired', name: 'game_day_expired', methods: ['POST'])]
-    public function dayExpired(): Response
+    #[Route('/order/{id}/expire', name: 'order_expire', methods: ['POST'])]
+    public function expireOrder(CakeOrder $order): Response
     {
         $bakery = $this->bakeryRepository->findOneBy([]);
 
-        if ($bakery === null) {
-            return $this->redirectToRoute('game_new');
-        }
-
-        if ($this->isDayExpired($bakery)) {
-            $this->failDayOrders($bakery);
+        if ($bakery !== null
+            && $order->getFailsAt() !== null
+            && $order->getFailsAt() <= new \DateTimeImmutable()
+            && in_array($order->getStatus(), [OrderStatus::PENDING, OrderStatus::IN_PROGRESS], true)
+        ) {
+            $this->orderService->fail($order, $bakery);
             $this->em->flush();
         }
-
-        $this->addFlash('danger', "⏰ Time's up! The day is over.");
 
         return $this->redirectToRoute('game_index');
     }
@@ -248,41 +199,26 @@ class GameController extends AbstractController
         return $item?->costPerUnit() ?? 0.0;
     }
 
-    private function isDayExpired(Bakery $bakery): bool
-    {
-        return $bakery->getDayEndsAt() !== null
-            && $bakery->getDayEndsAt() <= new \DateTimeImmutable();
-    }
-
-    private function failDayOrders(Bakery $bakery): void
-    {
-        foreach ($this->cakeOrderRepository->findActiveOrders() as $order) {
-            $this->orderService->fail($order, $bakery);
-        }
-    }
-
     private function startNewDay(Bakery $bakery): void
     {
         $bakery->setDay($bakery->getDay() + 1);
-        $dayEndsAt = $this->newDayEndsAt();
-        $bakery->setDayEndsAt($dayEndsAt);
-        $this->spawnOrdersForDay($bakery, $dayEndsAt);
+        $this->spawnOrdersForDay($bakery);
     }
 
-    private function spawnOrdersForDay(Bakery $bakery, \DateTimeImmutable $dayEndsAt): void
+    private function spawnOrdersForDay(Bakery $bakery): void
     {
-        $dayStartedAt = $dayEndsAt->modify('-' . Config::SECONDS_PER_DAY . ' seconds');
+        $count = Config::ordersForDay($bakery->getReputation());
+        $now   = new \DateTimeImmutable();
 
-        foreach (Config::SPAWN_DELAYS as $delay) {
+        for ($i = 0; $i < $count; $i++) {
+            $spawnAt = $now->modify('+' . ($i * Config::SPAWN_INTERVAL) . ' seconds');
+            $failsAt = $spawnAt->modify('+' . Config::SECONDS_PER_ORDER . ' seconds');
+
             $order = $this->orderGeneratorService->generate($bakery->getReputation());
-            $order->setSpawnAt($dayStartedAt->modify('+' . $delay . ' seconds'));
+            $order->setSpawnAt($spawnAt);
+            $order->setFailsAt($failsAt);
             $this->em->persist($order);
         }
-    }
-
-    private function newDayEndsAt(): \DateTimeImmutable
-    {
-        return (new \DateTimeImmutable())->modify('+' . Config::SECONDS_PER_DAY . ' seconds');
     }
 
     #[Route('/shop/restock', name: 'game_restock', methods: ['POST'])]

@@ -6,13 +6,10 @@
     <nav class="navbar navbar-dark bg-dark">
         <div class="container">
             <a class="navbar-brand" href="{{ path('game_index') }}">🎂 Back to Orders</a>
-            <div class="d-flex align-items-center gap-3">
-                {{ include('game/_timer.html.twig') }}
-                <div id="navbar-stats" class="d-flex gap-4 text-white small align-items-center">
-                    <span>💰 ${{ bakery.money|number_format(2) }}</span>
-                    <span>⭐ {{ bakery.reputation }}/100</span>
-                    <span>📅 Day {{ bakery.day }}</span>
-                </div>
+            <div id="navbar-stats" class="d-flex gap-4 text-white small align-items-center">
+                <span>💰 ${{ bakery.money|number_format(2) }}</span>
+                <span>⭐ {{ bakery.reputation }}/100</span>
+                <span>📅 Day {{ bakery.day }}</span>
             </div>
         </div>
     </nav>
