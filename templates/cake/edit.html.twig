@@ -1,0 +1,146 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Baking for {{ order.customerName }}{% endblock %}
+
+{% block navbar %}
+    <nav class="navbar navbar-dark bg-dark">
+        <div class="container">
+            <a class="navbar-brand" href="{{ path('game_index') }}">🎂 Back to Orders</a>
+            <div class="d-flex gap-4 text-white small align-items-center">
+                <span>💰 ${{ bakery.money|number_format(2) }}</span>
+                <span>⭐ {{ bakery.reputation }}/100</span>
+                <span>📅 Day {{ bakery.day }}</span>
+            </div>
+        </div>
+    </nav>
+{% endblock %}
+
+{% block body %}
+    <div class="row g-4">
+
+        {# Order requirements #}
+        <div class="col-md-3">
+            <div class="card shadow-sm h-100">
+                <div class="card-body">
+                    <h5 class="card-title">{{ order.customerName }}'s Order</h5>
+                    <p class="text-muted small">Due day {{ order.dueDay }}</p>
+                    <ul class="list-unstyled small">
+                        <li>🎂 {{ order.requiredSize.value }}</li>
+                        <li>🍦 {{ order.requiredFrostingFlavor.value }}</li>
+                        <li>📏 {{ order.requiredLayers }} layer{{ order.requiredLayers > 1 ? 's' : '' }}</li>
+                        {% if order.requiredToppings %}
+                            <li>✨ {{ order.requiredToppings|map(t => t.value)|join(', ') }}</li>
+                        {% else %}
+                            <li class="text-muted">No toppings required</li>
+                        {% endif %}
+                    </ul>
+                    <hr>
+                    <div class="text-success fw-semibold">Payout: ${{ order.payout|number_format(2) }}</div>
+                </div>
+            </div>
+        </div>
+
+        {# Cake builder #}
+        <div class="col-md-6">
+            <turbo-frame id="cake-builder">
+                <div class="card shadow-sm">
+                    <div class="card-body">
+                        <h5 class="card-title mb-4">Build your cake</h5>
+
+                        {# Size #}
+                        <div class="mb-4">
+                            <label class="form-label fw-semibold">Size</label>
+                            <div class="d-flex gap-2 flex-wrap">
+                                {% for size in sizes %}
+                                    <form method="post" action="{{ path('cake_set_size', {id: order.id, cakeId: cake.id}) }}" data-turbo-frame="cake-builder">
+                                        <input type="hidden" name="size" value="{{ size.value }}">
+                                        <button class="btn btn-sm {{ cake.size == size ? 'btn-primary' : 'btn-outline-secondary' }}">
+                                            {{ size.value }}
+                                        </button>
+                                    </form>
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                        {# Layers #}
+                        <div class="mb-4">
+                            <label class="form-label fw-semibold">Layers</label>
+                            <div class="d-flex gap-2">
+                                {% for i in 1..5 %}
+                                    <form method="post" action="{{ path('cake_set_layers', {id: order.id, cakeId: cake.id}) }}" data-turbo-frame="cake-builder">
+                                        <input type="hidden" name="layers" value="{{ i }}">
+                                        <button class="btn btn-sm {{ cake.layers == i ? 'btn-primary' : 'btn-outline-secondary' }}">
+                                            {{ i }}
+                                        </button>
+                                    </form>
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                        {# Frosting #}
+                        <div class="mb-4">
+                            <label class="form-label fw-semibold">Frosting</label>
+                            <div class="d-flex gap-2 flex-wrap">
+                                {% for flavor in flavors %}
+                                    <form method="post" action="{{ path('cake_set_frosting', {id: order.id, cakeId: cake.id}) }}" data-turbo-frame="cake-builder">
+                                        <input type="hidden" name="flavor" value="{{ flavor.value }}">
+                                        <button class="btn btn-sm {{ cake.frostingFlavor == flavor ? 'btn-primary' : 'btn-outline-secondary' }}">
+                                            {{ flavor.value }}
+                                        </button>
+                                    </form>
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                        {# Toppings #}
+                        <div class="mb-4">
+                            <label class="form-label fw-semibold">Toppings</label>
+                            <div class="d-flex gap-2 flex-wrap">
+                                {% for topping in toppings %}
+                                    <form method="post" action="{{ path('cake_toggle_topping', {id: order.id, cakeId: cake.id}) }}" data-turbo-frame="cake-builder">
+                                        <input type="hidden" name="topping" value="{{ topping.value }}">
+                                        <button class="btn btn-sm {{ cake.toppings and topping in cake.toppings ? 'btn-primary' : 'btn-outline-secondary' }}">
+                                            {{ topping.value }}
+                                        </button>
+                                    </form>
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                        {# Bake button #}
+                        <form method="post" action="{{ path('cake_bake', {id: order.id, cakeId: cake.id}) }}">
+                            <button
+                                class="btn btn-success w-100"
+                                {{ not canBake or not cake.size or not cake.frostingFlavor or not cake.layers ? 'disabled' : '' }}
+                            >
+                                🔥 Bake & Submit
+                            </button>
+                        </form>
+
+                        {% if not canBake %}
+                            <p class="text-danger small mt-2 mb-0">Not enough ingredients.</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </turbo-frame>
+        </div>
+
+        {# Inventory sidebar #}
+        <div class="col-md-3">
+            <div class="card shadow-sm h-100">
+                <div class="card-body">
+                    <h5 class="card-title">Pantry</h5>
+                    <ul class="list-unstyled small">
+                        {% for key, qty in bakery.inventory %}
+                            <li class="d-flex justify-content-between">
+                                <span>{{ key|capitalize }}</span>
+                                <span class="{{ qty < 3 ? 'text-danger' : 'text-muted' }}">{{ qty }}</span>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+    </div>
+{% endblock %}

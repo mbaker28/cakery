@@ -22,7 +22,7 @@ class GameController extends AbstractController
         private readonly EntityManagerInterface $em,
     ) {}
 
-    #[Route('/', name: 'game_index')]
+    #[Route('/', name: 'game_index', methods: ['GET'])]
     public function index(): Response
     {
         $bakery = $this->bakeryRepository->findOneBy([]);
@@ -39,7 +39,7 @@ class GameController extends AbstractController
         ]);
     }
 
-    #[Route('/new', name: 'game_new')]
+    #[Route('/new', name: 'game_new', methods: ['GET'])]
     public function new(): Response
     {
         if ($this->bakeryRepository->findOneBy([]) !== null) {

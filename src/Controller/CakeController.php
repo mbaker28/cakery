@@ -29,7 +29,7 @@ class CakeController extends AbstractController
         private readonly EntityManagerInterface $em,
     ) {}
 
-    #[Route('/build', name: 'cake_build')]
+    #[Route('/build', name: 'cake_build', methods: ['POST'])]
     public function build(CakeOrder $order): Response
     {
         if ($order->getStatus() === OrderStatus::FULFILLED || $order->getStatus() === OrderStatus::FAILED) {
@@ -46,7 +46,7 @@ class CakeController extends AbstractController
         return $this->redirectToRoute('cake_edit', ['id' => $order->getId(), 'cakeId' => $cake->getId()]);
     }
 
-    #[Route('/{cakeId}/edit', name: 'cake_edit', requirements: ['cakeId' => '\d+'])]
+    #[Route('/{cakeId}/edit', name: 'cake_edit', requirements: ['cakeId' => '\d+'], methods: ['GET'])]
     public function edit(CakeOrder $order, int $cakeId): Response
     {
         $cake = $this->getCakeOr404($order, $cakeId);

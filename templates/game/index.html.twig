@@ -49,7 +49,9 @@
                                 </ul>
                                 <div class="d-flex justify-content-between align-items-center">
                                     <span class="text-success fw-semibold">${{ order.payout|number_format(2) }}</span>
-                                    <a href="{{ path('cake_build', {id: order.id}) }}" class="btn btn-primary btn-sm">Bake</a>
+                                    <form method="post" action="{{ path('cake_build', {id: order.id}) }}">
+                                        <button class="btn btn-primary btn-sm">Bake</button>
+                                    </form>
                                 </div>
                             </div>
                         </div>
