@@ -134,6 +134,12 @@ class GameController extends AbstractController
             }
         }
 
-        return $this->redirectToRoute('game_index');
+        $params = ['bakery' => $bakery, 'ingredients' => Ingredient::cases()];
+
+        return new \Symfony\Component\HttpFoundation\Response(
+            $this->renderView('game/_restock.stream.html.twig', $params),
+            200,
+            ['Content-Type' => 'text/vnd.turbo-stream.html; charset=utf-8']
+        );
     }
 }

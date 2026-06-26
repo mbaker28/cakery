@@ -6,7 +6,7 @@
     <nav class="navbar navbar-dark bg-dark">
         <div class="container">
             <span class="navbar-brand mb-0 h1">🎂 {{ bakery.name }}</span>
-            <div class="d-flex gap-4 text-white small align-items-center">
+            <div id="navbar-stats" class="d-flex gap-4 text-white small align-items-center">
                 <span>💰 ${{ bakery.money|number_format(2) }}</span>
                 <span>⭐ {{ bakery.reputation }}/100</span>
                 <span>📅 Day {{ bakery.day }}</span>
@@ -68,29 +68,5 @@
         {% endif %}
     </turbo-frame>
 
-    <hr class="my-4">
-
-    <h2 class="h4 mb-3">Pantry & Shop</h2>
-    <div class="row g-3">
-        {% for ingredient in ingredients %}
-            {% set stock = bakery.inventory[ingredient.value] ?? 0 %}
-            <div class="col-md-4 col-lg-2">
-                <div class="card shadow-sm text-center">
-                    <div class="card-body py-3">
-                        <div class="fw-semibold">{{ ingredient.label }}</div>
-                        <div class="display-6 my-1 {{ stock < 3 ? 'text-danger' : 'text-secondary' }}">{{ stock }}</div>
-                        <div class="text-muted small mb-2">${{ ingredient.costPerUnit|number_format(2) }}/unit</div>
-                        <form method="post" action="{{ path('game_restock') }}">
-                            <input type="hidden" name="ingredient" value="{{ ingredient.value }}">
-                            <input type="hidden" name="quantity" value="5">
-                            <button class="btn btn-outline-primary btn-sm w-100"
-                                {{ bakery.money < ingredient.costPerUnit * 5 ? 'disabled' : '' }}>
-                                +5 (${{ (ingredient.costPerUnit * 5)|number_format(2) }})
-                            </button>
-                        </form>
-                    </div>
-                </div>
-            </div>
-        {% endfor %}
-    </div>
+    {{ include('game/_shop.html.twig') }}
 {% endblock %}

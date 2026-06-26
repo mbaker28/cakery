@@ -1,0 +1,14 @@
+<turbo-stream action="replace" target="shop">
+    <template>
+        {{ include('game/_shop.html.twig') }}
+    </template>
+</turbo-stream>
+<turbo-stream action="replace" target="navbar-stats">
+    <template>
+        <div id="navbar-stats" class="d-flex gap-4 text-white small align-items-center">
+            <span>💰 ${{ bakery.money|number_format(2) }}</span>
+            <span>⭐ {{ bakery.reputation }}/100</span>
+            <span>📅 Day {{ bakery.day }}</span>
+        </div>
+    </template>
+</turbo-stream>
