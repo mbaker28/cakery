@@ -121,6 +121,35 @@ class GameController extends AbstractController
         return $this->redirectToRoute('game_shop');
     }
 
+    #[Route('/end-day-early', name: 'game_end_day_early', methods: ['POST'])]
+    public function endDayEarly(): Response
+    {
+        $bakery = $this->bakeryRepository->findOneBy([]);
+
+        if ($bakery === null) {
+            return $this->redirectToRoute('game_new');
+        }
+
+        if ($bakery->getPhase() !== GamePhase::DAY) {
+            return $this->redirectToRoute('game_index');
+        }
+
+        foreach ($this->cakeOrderRepository->findActiveOrders() as $order) {
+            $this->orderService->fail($order, $bakery);
+        }
+
+        $this->em->flush();
+
+        if ($bakery->getDay() >= $bakery->getMaxDays()) {
+            return $this->redirectToRoute('game_results');
+        }
+
+        $bakery->setPhase(GamePhase::SHOP);
+        $this->em->flush();
+
+        return $this->redirectToRoute('game_shop');
+    }
+
     #[Route('/shop', name: 'game_shop', methods: ['GET'])]
     public function shop(): Response
     {

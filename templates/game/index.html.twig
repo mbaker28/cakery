@@ -29,7 +29,13 @@
                 <button class="btn btn-outline-secondary btn-sm">Next Day →</button>
             </form>
         {% else %}
-            <span class="text-muted small">{{ orders|length }} order{{ orders|length > 1 ? 's' : '' }} remaining</span>
+            <div class="d-flex align-items-center gap-3">
+                <span class="text-muted small">{{ orders|length }} order{{ orders|length > 1 ? 's' : '' }} remaining</span>
+                <form method="post" action="{{ path('game_end_day_early') }}"
+                      onsubmit="return confirm('End the day early? All remaining orders will be failed.')">
+                    <button class="btn btn-outline-danger btn-sm">End Day Early</button>
+                </form>
+            </div>
         {% endif %}
     </div>
 
