@@ -90,6 +90,7 @@ class GameController extends AbstractController
             ->setPhase(GamePhase::DAY);
 
         $this->em->persist($bakery);
+        $this->recordDayStart($bakery);
         $this->spawnOrdersForDay($bakery);
         $this->em->flush();
 
@@ -119,7 +120,7 @@ class GameController extends AbstractController
         $bakery->setPhase(GamePhase::SHOP);
         $this->em->flush();
 
-        return $this->redirectToRoute('game_shop');
+        return $this->redirectToRoute('game_day_summary');
     }
 
     #[Route('/end-day-early', name: 'game_end_day_early', methods: ['POST'])]
@@ -148,7 +149,44 @@ class GameController extends AbstractController
         $bakery->setPhase(GamePhase::SHOP);
         $this->em->flush();
 
-        return $this->redirectToRoute('game_shop');
+        return $this->redirectToRoute('game_day_summary');
+    }
+
+    #[Route('/day-summary', name: 'game_day_summary', methods: ['GET'])]
+    public function daySummary(): Response
+    {
+        $bakery = $this->bakeryRepository->findOneBy([]);
+
+        if ($bakery === null) {
+            return $this->redirectToRoute('game_new');
+        }
+
+        if ($bakery->getPhase() === GamePhase::DAY) {
+            return $this->redirectToRoute('game_index');
+        }
+
+        $total     = $bakery->getDayTotalOrders() ?? 0;
+        $completed = $bakery->getOrdersCompleted() - ($bakery->getDayStartOrdersCompleted() ?? 0);
+        $failed    = $bakery->getOrdersFailed()    - ($bakery->getDayStartOrdersFailed()    ?? 0);
+        $earned    = $bakery->getMoney()            - ($bakery->getDayStartMoney()           ?? $bakery->getMoney());
+        $repChange = $bakery->getReputation()       - ($bakery->getDayStartReputation()      ?? $bakery->getReputation());
+
+        $rating = match(true) {
+            $total > 0 && $completed === $total          => 'perfect',
+            $total > 0 && $completed / $total >= 0.75   => 'great',
+            $total > 0 && $completed / $total >= 0.4    => 'decent',
+            default                                      => 'rough',
+        };
+
+        return $this->render('game/day_summary.html.twig', [
+            'bakery'    => $bakery,
+            'total'     => $total,
+            'completed' => $completed,
+            'failed'    => $failed,
+            'earned'    => $earned,
+            'repChange' => $repChange,
+            'rating'    => $rating,
+        ]);
     }
 
     #[Route('/shop', name: 'game_shop', methods: ['GET'])]
@@ -186,6 +224,7 @@ class GameController extends AbstractController
 
         $bakery->setDay($bakery->getDay() + 1);
         $bakery->setPhase(GamePhase::DAY);
+        $this->recordDayStart($bakery);
         $this->spawnOrdersForDay($bakery);
         $this->em->flush();
 
@@ -278,6 +317,15 @@ class GameController extends AbstractController
         $this->em->createQuery('DELETE FROM App\Entity\Bakery b')->execute();
 
         return $this->redirectToRoute('game_new');
+    }
+
+    private function recordDayStart(Bakery $bakery): void
+    {
+        $bakery->setDayStartMoney($bakery->getMoney());
+        $bakery->setDayStartReputation($bakery->getReputation());
+        $bakery->setDayStartOrdersCompleted($bakery->getOrdersCompleted());
+        $bakery->setDayStartOrdersFailed($bakery->getOrdersFailed());
+        $bakery->setDayTotalOrders(Config::ordersForDay($bakery->getReputation()));
     }
 
     private function spawnOrdersForDay(Bakery $bakery): void

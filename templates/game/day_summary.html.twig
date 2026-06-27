@@ -1,0 +1,153 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Day {{ bakery.day }} Summary — {{ bakery.name }}{% endblock %}
+
+{% block navbar %}
+    <nav class="navbar navbar-dark bg-dark">
+        <div class="container">
+            <span class="navbar-brand mb-0 h1">🎂 {{ bakery.name }}</span>
+            <div class="d-flex gap-4 text-white small align-items-center">
+                <span>💰 ${{ bakery.money|number_format(2) }}</span>
+                <span>⭐ {{ bakery.reputation }}/100</span>
+                <span>📅 Day {{ bakery.day }} / {{ bakery.maxDays }}</span>
+            </div>
+        </div>
+    </nav>
+{% endblock %}
+
+{% block body %}
+<style>
+    .summary-wrap { max-width: 520px; margin: 0 auto; }
+
+    .rating-banner {
+        border-radius: 12px;
+        padding: 2rem 1.5rem;
+        text-align: center;
+        margin-bottom: 1.5rem;
+    }
+    .rating-banner .rating-emoji { font-size: 2.75rem; line-height: 1; }
+    .rating-banner h2 { text-wrap: balance; margin: 0.5rem 0 0; font-weight: 700; }
+
+    .rating-perfect { background: linear-gradient(135deg, #f5c400 0%, #e09800 100%); color: #2d2000; }
+    .rating-great   { background: #1a6641; color: #d4f0e2; }
+    .rating-decent  { background: #1a3e6e; color: #cfe0f5; }
+    .rating-rough   { background: #3d3d3d; color: #d4d4d4; }
+
+    .stat-tile {
+        background: #f7f7f5;
+        border-radius: 10px;
+        padding: 1.1rem 0.75rem;
+        text-align: center;
+    }
+    .stat-value {
+        font-size: 1.85rem;
+        font-weight: 700;
+        line-height: 1;
+        font-variant-numeric: tabular-nums;
+    }
+    .stat-label {
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        letter-spacing: 0.07em;
+        color: #888;
+        margin-top: 0.35rem;
+    }
+
+    .standing-strip {
+        background: #1e2435;
+        border-radius: 10px;
+        padding: 1.1rem 1.5rem;
+        display: flex;
+        justify-content: space-around;
+        align-items: center;
+        margin-bottom: 1.75rem;
+    }
+    .standing-strip .standing-item { text-align: center; color: #fff; }
+    .standing-strip .standing-value { font-size: 1.15rem; font-weight: 600; font-variant-numeric: tabular-nums; }
+    .standing-strip .standing-label { font-size: 0.7rem; opacity: 0.55; text-transform: uppercase; letter-spacing: 0.06em; margin-top: 0.2rem; }
+    .standing-divider { width: 1px; height: 2.5rem; background: rgba(255,255,255,0.12); }
+</style>
+
+<div class="summary-wrap">
+
+    {% set ratingMap = {
+        'perfect': { emoji: '⭐', headline: 'Perfect Day!',  cls: 'rating-perfect' },
+        'great':   { emoji: '🎉', headline: 'Great Work!',   cls: 'rating-great'   },
+        'decent':  { emoji: '👍', headline: 'Not Bad!',      cls: 'rating-decent'  },
+        'rough':   { emoji: '😓', headline: 'Rough Day',     cls: 'rating-rough'   },
+    } %}
+    {% set r = ratingMap[rating] %}
+
+    <div class="rating-banner {{ r.cls }}">
+        <div class="rating-emoji">{{ r.emoji }}</div>
+        <h2>Day {{ bakery.day }} — {{ r.headline }}</h2>
+        {% if rating == 'perfect' %}
+            <p class="mb-0 mt-1 small opacity-75">Every order out the door. Flawless.</p>
+        {% elseif rating == 'great' %}
+            <p class="mb-0 mt-1 small opacity-75">Most customers left happy.</p>
+        {% elseif rating == 'decent' %}
+            <p class="mb-0 mt-1 small opacity-75">Room to improve — stock up wisely.</p>
+        {% else %}
+            <p class="mb-0 mt-1 small opacity-75">
+                {% if total == 0 %}No orders today.{% else %}Most orders fell through. Better luck tomorrow.{% endif %}
+            </p>
+        {% endif %}
+    </div>
+
+    <div class="row g-3 mb-3">
+        <div class="col-4">
+            <div class="stat-tile">
+                <div class="stat-value {{ completed == total and total > 0 ? 'text-success' : (failed > completed ? 'text-danger' : '') }}">
+                    {{ completed }}<span class="fs-5 fw-normal text-muted">/{{ total }}</span>
+                </div>
+                <div class="stat-label">Orders done</div>
+            </div>
+        </div>
+        <div class="col-4">
+            <div class="stat-tile">
+                <div class="stat-value text-success">+${{ earned|number_format(2) }}</div>
+                <div class="stat-label">Earned</div>
+            </div>
+        </div>
+        <div class="col-4">
+            <div class="stat-tile">
+                <div class="stat-value {{ repChange >= 0 ? 'text-success' : 'text-danger' }}">
+                    {{ repChange >= 0 ? '+' : '' }}{{ repChange }}
+                </div>
+                <div class="stat-label">Reputation</div>
+            </div>
+        </div>
+    </div>
+
+    {% if failed > 0 %}
+        <p class="text-muted small text-center mb-3">
+            {{ failed }} order{{ failed > 1 ? 's' : '' }} failed — each carries a reputation penalty.
+        </p>
+    {% endif %}
+
+    <div class="standing-strip">
+        <div class="standing-item">
+            <div class="standing-value">💰 ${{ bakery.money|number_format(2) }}</div>
+            <div class="standing-label">Balance</div>
+        </div>
+        <div class="standing-divider"></div>
+        <div class="standing-item">
+            <div class="standing-value">⭐ {{ bakery.reputation }}/100</div>
+            <div class="standing-label">Reputation</div>
+        </div>
+        <div class="standing-divider"></div>
+        <div class="standing-item">
+            <div class="standing-value">📅 {{ bakery.maxDays - bakery.day }} left</div>
+            <div class="standing-label">Days remaining</div>
+        </div>
+    </div>
+
+    <div class="text-center">
+        <a href="{{ path('game_shop') }}" class="btn btn-primary btn-lg px-5">
+            Head to Shop →
+        </a>
+        <p class="text-muted small mt-2 mb-0">Stock up for Day {{ bakery.day + 1 }}</p>
+    </div>
+
+</div>
+{% endblock %}

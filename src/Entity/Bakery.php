@@ -43,6 +43,21 @@ class Bakery
     #[ORM\Column(enumType: GamePhase::class, length: 10)]
     private GamePhase $phase = GamePhase::DAY;
 
+    #[ORM\Column(nullable: true)]
+    private ?float $dayStartMoney = null;
+
+    #[ORM\Column(nullable: true)]
+    private ?int $dayStartReputation = null;
+
+    #[ORM\Column(nullable: true)]
+    private ?int $dayStartOrdersCompleted = null;
+
+    #[ORM\Column(nullable: true)]
+    private ?int $dayStartOrdersFailed = null;
+
+    #[ORM\Column(nullable: true)]
+    private ?int $dayTotalOrders = null;
+
     /**
      * @var array<string, int> $inventory
      */
@@ -177,6 +192,66 @@ class Bakery
     public function setPhase(GamePhase $phase): static
     {
         $this->phase = $phase;
+
+        return $this;
+    }
+
+    public function getDayStartMoney(): ?float
+    {
+        return $this->dayStartMoney;
+    }
+
+    public function setDayStartMoney(?float $dayStartMoney): static
+    {
+        $this->dayStartMoney = $dayStartMoney;
+
+        return $this;
+    }
+
+    public function getDayStartReputation(): ?int
+    {
+        return $this->dayStartReputation;
+    }
+
+    public function setDayStartReputation(?int $dayStartReputation): static
+    {
+        $this->dayStartReputation = $dayStartReputation;
+
+        return $this;
+    }
+
+    public function getDayStartOrdersCompleted(): ?int
+    {
+        return $this->dayStartOrdersCompleted;
+    }
+
+    public function setDayStartOrdersCompleted(?int $dayStartOrdersCompleted): static
+    {
+        $this->dayStartOrdersCompleted = $dayStartOrdersCompleted;
+
+        return $this;
+    }
+
+    public function getDayStartOrdersFailed(): ?int
+    {
+        return $this->dayStartOrdersFailed;
+    }
+
+    public function setDayStartOrdersFailed(?int $dayStartOrdersFailed): static
+    {
+        $this->dayStartOrdersFailed = $dayStartOrdersFailed;
+
+        return $this;
+    }
+
+    public function getDayTotalOrders(): ?int
+    {
+        return $this->dayTotalOrders;
+    }
+
+    public function setDayTotalOrders(?int $dayTotalOrders): static
+    {
+        $this->dayTotalOrders = $dayTotalOrders;
 
         return $this;
     }
