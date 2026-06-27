@@ -34,23 +34,21 @@ class OrderGeneratorServiceTest extends TestCase
         }
     }
 
-    public function testTier2OnlyProducesSixInchOrNineInch(): void
+    public function testTier2NeverProducesTieredCake(): void
     {
-        $allowed = [CakeSize::SIX_INCH, CakeSize::NINE_INCH];
-
         for ($i = 0; $i < 50; $i++) {
             $order = $this->service->generate(50);
-            $this->assertContains($order->getRequiredSize(), $allowed);
+            $this->assertNotSame(CakeSize::TIERED, $order->getRequiredSize());
         }
     }
 
-    public function testTier3OnlyProducesNineInchOrTiered(): void
+    public function testTier3CanProduceAnySize(): void
     {
-        $allowed = [CakeSize::NINE_INCH, CakeSize::TIERED];
+        $valid = CakeSize::cases();
 
         for ($i = 0; $i < 50; $i++) {
             $order = $this->service->generate(80);
-            $this->assertContains($order->getRequiredSize(), $allowed);
+            $this->assertContains($order->getRequiredSize(), $valid);
         }
     }
 
@@ -63,11 +61,11 @@ class OrderGeneratorServiceTest extends TestCase
         }
     }
 
-    public function testTier3LayersAreWithinRange(): void
+    public function testTier3LayersAreWithinFullRange(): void
     {
         for ($i = 0; $i < 20; $i++) {
             $order = $this->service->generate(80);
-            $this->assertGreaterThanOrEqual(3, $order->getRequiredLayers());
+            $this->assertGreaterThanOrEqual(1, $order->getRequiredLayers());
             $this->assertLessThanOrEqual(4, $order->getRequiredLayers());
         }
     }

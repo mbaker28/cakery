@@ -77,13 +77,33 @@ class OrderGeneratorService
             ->setHappinessBonus(random_int($minBonus, $maxBonus));
     }
 
+    // Weights per [tier1, tier2, tier3] at each max tier.
+    // Higher max tier unlocks harder orders but simpler orders still appear.
+    private const TIER_WEIGHTS = [
+        1 => [100, 0,  0],
+        2 => [40,  60, 0],
+        3 => [20,  40, 40],
+    ];
+
     private function tier(int $reputation): int
     {
-        return match(true) {
+        $maxTier = match(true) {
             $reputation >= 67 => 3,
             $reputation >= 34 => 2,
             default           => 1,
         };
+
+        $weights = self::TIER_WEIGHTS[$maxTier];
+        $roll    = random_int(1, 100);
+        $sum     = 0;
+        foreach ($weights as $tier => $weight) {
+            $sum += $weight;
+            if ($roll <= $sum) {
+                return $tier + 1;
+            }
+        }
+
+        return $maxTier;
     }
 
     private function randomToppings(int $tier): array

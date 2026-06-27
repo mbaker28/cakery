@@ -30,21 +30,21 @@ enum Ingredient: string implements Restockable
     {
         return match($this) {
             self::FLOUR   => 'bag',
-            self::BUTTER  => 'tbsp',
+            self::BUTTER  => 'stick',
             self::EGGS    => 'egg',
             self::SUGAR   => 'bag',
-            self::MILK    => 'cup',
+            self::MILK    => 'gallon',
         };
     }
 
     public function costPerUnit(): float
     {
         return match($this) {
-            self::FLOUR   => 0.30,  // per bag
-            self::BUTTER  => 0.15,  // per tablespoon
+            self::FLOUR   => 1.50,  // per bag
+            self::BUTTER  => 1.50,  // per stick
             self::EGGS    => 0.35,  // per egg
-            self::SUGAR   => 0.25,  // per bag
-            self::MILK    => 0.60,  // per cup
+            self::SUGAR   => 1.25,  // per bag
+            self::MILK    => 3.00,  // per gallon
         };
     }
 

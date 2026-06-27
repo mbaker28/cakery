@@ -48,11 +48,11 @@ class Bakery
      */
     #[ORM\Column]
     private array $inventory = [
-        Ingredient::FLOUR->value  => 5,   // bags
-        Ingredient::BUTTER->value => 24,  // tbsp (≈ 3 sticks)
-        Ingredient::EGGS->value   => 12,  // eggs (1 dozen)
-        Ingredient::SUGAR->value  => 4,   // bags
-        Ingredient::MILK->value   => 4,   // cups
+        Ingredient::FLOUR->value  => 5.0,  // bags
+        Ingredient::BUTTER->value => 3.0,  // sticks
+        Ingredient::EGGS->value   => 24.0, // eggs
+        Ingredient::SUGAR->value  => 4.0,  // bags
+        Ingredient::MILK->value   => 3.0,  // gallons
         FrostingFlavor::FROSTING_CHOCOLATE->value    => 3,
         FrostingFlavor::FROSTING_VANILLA->value      => 3,
         FrostingFlavor::FROSTING_CREAM_CHEESE->value => 3,
@@ -181,12 +181,12 @@ class Bakery
         return $this;
     }
 
-    public function getStock(Restockable $item): int
+    public function getStock(Restockable $item): float
     {
-        return $this->inventory[$item->inventoryKey()];
+        return $this->inventory[$item->inventoryKey()] ?? 0.0;
     }
 
-    public function setStock(Restockable $item, int $amount): static
+    public function setStock(Restockable $item, float $amount): static
     {
         $this->inventory[$item->inventoryKey()] = $amount;
 

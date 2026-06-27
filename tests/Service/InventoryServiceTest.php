@@ -23,11 +23,11 @@ class InventoryServiceTest extends TestCase
         $this->bakery = (new Bakery())
             ->setMoney(100.0)
             ->setInventory([
-                'flour'  => 20,
-                'butter' => 20,
-                'eggs'   => 20,
-                'sugar'  => 20,
-                'milk'   => 20,
+                'flour'  => 10.0,
+                'butter' => 10.0,
+                'eggs'   => 20.0,
+                'sugar'  => 10.0,
+                'milk'   => 10.0,
             ]);
     }
 
@@ -36,18 +36,28 @@ class InventoryServiceTest extends TestCase
         return (new Cake())->setSize($size)->setLayers($layers);
     }
 
-    public function testCupcakeOneLayerRequiresOneOfEach(): void
+    public function testCupcakeOneLayerRequiresCorrectAmounts(): void
     {
         $requirements = $this->service->getRequirements($this->cake(CakeSize::CUPCAKE, 1));
 
-        $this->assertSame(['flour' => 1, 'butter' => 1, 'eggs' => 1, 'sugar' => 1, 'milk' => 1], $requirements);
+        // 1.0 base * 0.25 size multiplier * 1 layer
+        $this->assertEqualsWithDelta(0.25, $requirements['flour'], 0.001);
+        $this->assertEqualsWithDelta(0.25, $requirements['butter'], 0.001);
+        $this->assertEqualsWithDelta(1.0,  $requirements['eggs'], 0.001);
+        $this->assertEqualsWithDelta(0.25, $requirements['sugar'], 0.001);
+        $this->assertEqualsWithDelta(0.25, $requirements['milk'], 0.001);
     }
 
     public function testSixInchTwoLayersRequiresCorrectAmounts(): void
     {
         $requirements = $this->service->getRequirements($this->cake(CakeSize::SIX_INCH, 2));
 
-        $this->assertSame(['flour' => 2, 'butter' => 4, 'eggs' => 1, 'sugar' => 1, 'milk' => 1], $requirements);
+        // 1.0 base * 0.5 size multiplier * 2 layers = 1.0 for most; eggs = 4.0 * 0.5 * 2 = 4.0
+        $this->assertEqualsWithDelta(1.0, $requirements['flour'], 0.001);
+        $this->assertEqualsWithDelta(1.0, $requirements['butter'], 0.001);
+        $this->assertEqualsWithDelta(4.0, $requirements['eggs'], 0.001);
+        $this->assertEqualsWithDelta(1.0, $requirements['sugar'], 0.001);
+        $this->assertEqualsWithDelta(1.0, $requirements['milk'], 0.001);
     }
 
     public function testLargerCakesRequireMoreIngredients(): void
@@ -115,11 +125,12 @@ class InventoryServiceTest extends TestCase
     {
         $cake = $this->cake(CakeSize::SIX_INCH, 2);
         $requirements = $this->service->getRequirements($cake);
+        $before = $this->bakery->getInventory();
 
         $this->service->deduct($cake, $this->bakery);
 
         foreach ($requirements as $ingredient => $needed) {
-            $this->assertSame(20 - $needed, $this->bakery->getInventory()[$ingredient]);
+            $this->assertSame($before[$ingredient] - $needed, $this->bakery->getInventory()[$ingredient]);
         }
     }
 
@@ -133,10 +144,11 @@ class InventoryServiceTest extends TestCase
 
     public function testRestockIncreasesInventoryAndDeductsMoney(): void
     {
-        $this->service->restock(Ingredient::FLOUR, 10, $this->bakery);
+        $before = $this->bakery->getInventory()['flour'];
+        $this->service->restock(Ingredient::FLOUR, 2, $this->bakery);
 
-        $this->assertSame(30, $this->bakery->getInventory()['flour']);
-        $this->assertEqualsWithDelta(100.0 - (10 * Ingredient::FLOUR->costPerUnit()), $this->bakery->getMoney(), 0.01);
+        $this->assertEqualsWithDelta($before + 2, $this->bakery->getInventory()['flour'], 0.001);
+        $this->assertEqualsWithDelta(100.0 - (2 * Ingredient::FLOUR->costPerUnit()), $this->bakery->getMoney(), 0.01);
     }
 
     public function testRestockThrowsWithInsufficientFunds(): void

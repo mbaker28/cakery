@@ -9,11 +9,11 @@ use App\Enum\Restockable;
 class InventoryService
 {
     private const BASE_REQUIREMENTS = [
-        'flour'  => 2,    // bags
-        'butter' => 4,    // tablespoons
-        'eggs'   => 1,    // eggs
-        'sugar'  => 1,    // bags
-        'milk'   => 1,    // cups
+        'flour'  => 1.0,  // bags
+        'butter' => 1.0,  // sticks
+        'eggs'   => 4.0,  // eggs
+        'sugar'  => 1.0,  // bags
+        'milk'   => 1.0,  // gallons
     ];
 
     private const SIZE_MULTIPLIER = [
@@ -23,7 +23,7 @@ class InventoryService
         'tiered'  => 1.5,
     ];
 
-    /** @return array<string, int> */
+    /** @return array<string, float> */
     public function getRequirements(Cake $cake): array
     {
         if ($cake->getSize() === null || $cake->getLayers() === null) {
@@ -34,7 +34,7 @@ class InventoryService
 
         $requirements = [];
         foreach (self::BASE_REQUIREMENTS as $ingredient => $base) {
-            $requirements[$ingredient] = (int) ceil($base * $multiplier);
+            $requirements[$ingredient] = round($base * $multiplier, 4);
         }
 
         if ($cake->getFrostingFlavor() !== null) {
