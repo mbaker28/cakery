@@ -240,10 +240,11 @@ class GameController extends AbstractController
             $request->setRequestFormat(TurboBundle::STREAM_FORMAT);
 
             return $this->render('game/_restock.stream.html.twig', [
-                'bakery'  => $bakery,
-                'item'    => $item,
-                'success' => $success,
-                'message' => $message,
+                'bakery'   => $bakery,
+                'item'     => $item,
+                'success'  => $success,
+                'message'  => $message,
+                'quantity' => $quantity,
             ]);
         }
 
