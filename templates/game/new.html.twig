@@ -8,7 +8,7 @@
             <div class="card shadow-sm">
                 <div class="card-body p-4">
                     <h1 class="card-title h3 mb-1">Open your bakery</h1>
-                    <p class="text-muted mb-4">Give your bakery a name to get started.</p>
+                    <p class="text-muted mb-4">Name your bakery and choose your challenge.</p>
                     <form method="post" action="{{ path('game_create') }}">
                         <div class="mb-3">
                             <label for="name" class="form-label">Bakery name</label>
@@ -21,6 +21,28 @@
                                 required
                                 autofocus
                             >
+                        </div>
+                        <div class="mb-4">
+                            <label class="form-label">Challenge length</label>
+                            <div class="d-flex gap-2">
+                                <input type="radio" class="btn-check" name="max_days" id="days7" value="7" checked>
+                                <label class="btn btn-outline-primary flex-fill text-center" for="days7">
+                                    <div class="fw-semibold">7 Days</div>
+                                    <div class="small text-muted">Quick</div>
+                                </label>
+
+                                <input type="radio" class="btn-check" name="max_days" id="days14" value="14">
+                                <label class="btn btn-outline-primary flex-fill text-center" for="days14">
+                                    <div class="fw-semibold">14 Days</div>
+                                    <div class="small text-muted">Standard</div>
+                                </label>
+
+                                <input type="radio" class="btn-check" name="max_days" id="days30" value="30">
+                                <label class="btn btn-outline-primary flex-fill text-center" for="days30">
+                                    <div class="fw-semibold">30 Days</div>
+                                    <div class="small text-muted">Marathon</div>
+                                </label>
+                            </div>
                         </div>
                         <button type="submit" class="btn btn-primary w-100">Open for business</button>
                     </form>

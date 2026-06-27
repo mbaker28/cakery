@@ -10,7 +10,7 @@
                 <div id="navbar-stats" class="d-flex gap-4 text-white small align-items-center">
                     <span>💰 ${{ bakery.money|number_format(2) }}</span>
                     <span>⭐ {{ bakery.reputation }}/100</span>
-                    <span>📅 Day {{ bakery.day }}</span>
+                    <span>📅 Day {{ bakery.day }} / {{ bakery.maxDays }}</span>
                 </div>
                 <form method="post" action="{{ path('game_restart') }}"
                       onsubmit="return confirm('Start a new game? Your current progress will be lost.')">
@@ -52,7 +52,12 @@
                                         <span class="fs-3">{{ order.avatar }}</span>
                                         <div class="fw-semibold">{{ order.customerName }}</div>
                                     </div>
-                                    <span data-order-timer-target="countdown" class="badge bg-secondary">--:--</span>
+                                    <div style="min-width:90px">
+                                        <div class="text-end small mb-1" data-order-timer-target="patienceLabel">😊 Excited</div>
+                                        <div class="progress" style="height:5px">
+                                            <div class="progress-bar bg-success" data-order-timer-target="patienceBar" style="width:100%"></div>
+                                        </div>
+                                    </div>
                                 </div>
                                 <ul class="list-unstyled small mb-3">
                                     <li>🎂 {{ order.requiredSize.value }}</li>

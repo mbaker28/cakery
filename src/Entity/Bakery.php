@@ -37,6 +37,9 @@ class Bakery
     #[ORM\Column]
     private ?int $ordersFailed = null;
 
+    #[ORM\Column]
+    private int $maxDays = 7;
+
     #[ORM\Column(enumType: GamePhase::class, length: 10)]
     private GamePhase $phase = GamePhase::DAY;
 
@@ -45,17 +48,17 @@ class Bakery
      */
     #[ORM\Column]
     private array $inventory = [
-        Ingredient::FLOUR->value  => 2,
-        Ingredient::BUTTER->value => 2,
-        Ingredient::EGGS->value   => 2,
-        Ingredient::SUGAR->value  => 2,
-        Ingredient::MILK->value   => 2,
-        FrostingFlavor::FROSTING_CHOCOLATE->value    => 2,
-        FrostingFlavor::FROSTING_VANILLA->value      => 2,
-        FrostingFlavor::FROSTING_CREAM_CHEESE->value => 2,
-        Topping::TOPPING_SPRINKLES->value        => 2,
-        Topping::TOPPING_CHOCOLATE_CHIPS->value  => 2,
-        Topping::TOPPING_STRAWBERRIES->value     => 2,
+        Ingredient::FLOUR->value  => 10,
+        Ingredient::BUTTER->value => 5,
+        Ingredient::EGGS->value   => 5,
+        Ingredient::SUGAR->value  => 5,
+        Ingredient::MILK->value   => 5,
+        FrostingFlavor::FROSTING_CHOCOLATE->value    => 3,
+        FrostingFlavor::FROSTING_VANILLA->value      => 3,
+        FrostingFlavor::FROSTING_CREAM_CHEESE->value => 3,
+        Topping::TOPPING_SPRINKLES->value        => 3,
+        Topping::TOPPING_CHOCOLATE_CHIPS->value  => 3,
+        Topping::TOPPING_STRAWBERRIES->value     => 3,
     ];
 
     public function getId(): ?int
@@ -150,6 +153,18 @@ class Bakery
     public function setInventory(array $inventory): static
     {
         $this->inventory = $inventory;
+
+        return $this;
+    }
+
+    public function getMaxDays(): int
+    {
+        return $this->maxDays;
+    }
+
+    public function setMaxDays(int $maxDays): static
+    {
+        $this->maxDays = $maxDays;
 
         return $this;
     }

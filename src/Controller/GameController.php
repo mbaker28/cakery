@@ -4,7 +4,6 @@ namespace App\Controller;
 
 use App\Config;
 use App\Entity\Bakery;
-use App\Entity\Cake;
 use App\Entity\CakeOrder;
 use App\Enum\FrostingFlavor;
 use App\Enum\GamePhase;
@@ -21,6 +20,7 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
+use Symfony\UX\Turbo\TurboBundle;
 
 class GameController extends AbstractController
 {
@@ -73,11 +73,17 @@ class GameController extends AbstractController
             return $this->redirectToRoute('game_index');
         }
 
+        $maxDays = $request->request->getInt('max_days', 7);
+        if (!in_array($maxDays, [7, 14, 30], true)) {
+            $maxDays = 7;
+        }
+
         $bakery = (new Bakery())
             ->setName($request->request->getString('name', 'My Bakery'))
             ->setMoney(50.0)
             ->setReputation(20)
             ->setDay(1)
+            ->setMaxDays($maxDays)
             ->setOrdersCompleted(0)
             ->setOrdersFailed(0)
             ->setPhase(GamePhase::DAY);
@@ -105,6 +111,10 @@ class GameController extends AbstractController
             return $this->redirectToRoute('game_index');
         }
 
+        if ($bakery->getDay() >= $bakery->getMaxDays()) {
+            return $this->redirectToRoute('game_results');
+        }
+
         $bakery->setPhase(GamePhase::SHOP);
         $this->em->flush();
 
@@ -125,9 +135,9 @@ class GameController extends AbstractController
         }
 
         return $this->render('game/shop.html.twig', [
-            'bakery'         => $bakery,
-            'restockables'   => [...Ingredient::cases(), ...FrostingFlavor::cases(), ...Topping::cases()],
-            'nextDayOrders'  => Config::ordersForDay($bakery->getReputation()),
+            'bakery'        => $bakery,
+            'restockables'  => [...Ingredient::cases(), ...FrostingFlavor::cases(), ...Topping::cases()],
+            'nextDayOrders' => Config::ordersForDay($bakery->getReputation()),
         ]);
     }
 
@@ -149,12 +159,6 @@ class GameController extends AbstractController
         $this->spawnOrdersForDay($bakery);
         $this->em->flush();
 
-        $orders = $this->cakeOrderRepository->findActiveOrders();
-
-        if (!$this->canFulfillAllOrders($orders, $bakery)) {
-            return $this->redirectToRoute('game_over');
-        }
-
         return $this->redirectToRoute('game_index');
     }
 
@@ -170,6 +174,7 @@ class GameController extends AbstractController
         ) {
             $this->orderService->fail($order, $bakery);
             $this->em->flush();
+            $this->addFlash('danger', sprintf('😤 %s ran out of patience and left!', $order->getCustomerName()));
         }
 
         return $this->redirectToRoute('game_index');
@@ -188,25 +193,48 @@ class GameController extends AbstractController
         $item     = Ingredient::tryFrom($value) ?? FrostingFlavor::tryFrom($value) ?? Topping::tryFrom($value);
         $quantity = max(1, $request->request->getInt('quantity', 5));
 
+        $message = null;
+        $success = false;
+
         if ($item !== null) {
             try {
                 $this->inventoryService->restock($item, $quantity, $bakery);
                 $this->em->flush();
-                $this->addFlash('success', sprintf('Restocked %d× %s.', $quantity, $item->label()));
+                $message = sprintf('Restocked %d× %s.', $quantity, $item->label());
+                $success = true;
             } catch (\RuntimeException) {
-                $this->addFlash('danger', 'Not enough money.');
+                $message = 'Not enough money.';
             }
+        }
+
+        if (TurboBundle::STREAM_FORMAT === $request->getPreferredFormat()) {
+            $request->setRequestFormat(TurboBundle::STREAM_FORMAT);
+
+            return $this->render('game/_restock.stream.html.twig', [
+                'bakery'  => $bakery,
+                'item'    => $item,
+                'success' => $success,
+                'message' => $message,
+            ]);
+        }
+
+        if ($message !== null) {
+            $this->addFlash($success ? 'success' : 'danger', $message);
         }
 
         return $this->redirectToRoute('game_shop');
     }
 
-    #[Route('/game-over', name: 'game_over', methods: ['GET'])]
-    public function gameOver(): Response
+    #[Route('/results', name: 'game_results', methods: ['GET'])]
+    public function results(): Response
     {
         $bakery = $this->bakeryRepository->findOneBy([]);
 
-        return $this->render('game/game_over.html.twig', [
+        if ($bakery === null) {
+            return $this->redirectToRoute('game_new');
+        }
+
+        return $this->render('game/results.html.twig', [
             'bakery' => $bakery,
         ]);
     }
@@ -219,39 +247,6 @@ class GameController extends AbstractController
         $this->em->createQuery('DELETE FROM App\Entity\Bakery b')->execute();
 
         return $this->redirectToRoute('game_new');
-    }
-
-    private function canFulfillAllOrders(array $orders, Bakery $bakery): bool
-    {
-        $totalNeeded = [];
-
-        foreach ($orders as $order) {
-            $fakeCake = (new Cake())
-                ->setSize($order->getRequiredSize())
-                ->setLayers($order->getRequiredLayers())
-                ->setFrostingFlavor($order->getRequiredFrostingFlavor())
-                ->setToppings($order->getRequiredToppings() ?? []);
-
-            try {
-                $requirements = $this->inventoryService->getRequirements($fakeCake);
-            } catch (\LogicException) {
-                continue;
-            }
-
-            foreach ($requirements as $key => $amount) {
-                $totalNeeded[$key] = ($totalNeeded[$key] ?? 0) + $amount;
-            }
-        }
-
-        $inventory = $bakery->getInventory();
-
-        foreach ($totalNeeded as $key => $needed) {
-            if (($inventory[$key] ?? 0) < $needed) {
-                return false;
-            }
-        }
-
-        return true;
     }
 
     private function spawnOrdersForDay(Bakery $bakery): void

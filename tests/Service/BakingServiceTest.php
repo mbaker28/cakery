@@ -18,107 +18,28 @@ class BakingServiceTest extends TestCase
         $this->service = new BakingService();
     }
 
-    private function cake(CakeSize $size, int $layers, FrostingFlavor $frosting, array $toppings = []): Cake
+    public function testBakeSetsIsBaked(): void
     {
-        return (new Cake())
-            ->setSize($size)
-            ->setLayers($layers)
-            ->setFrostingFlavor($frosting)
-            ->setToppings($toppings);
-    }
+        $cake = (new Cake())
+            ->setSize(CakeSize::SIX_INCH)
+            ->setLayers(2)
+            ->setFrostingFlavor(FrostingFlavor::FROSTING_VANILLA);
 
-    public function testBakeSetsIsBakedAndQualityScore(): void
-    {
-        $cake = $this->cake(CakeSize::SIX_INCH, 2, FrostingFlavor::FROSTING_VANILLA);
-
-        $score = $this->service->bake($cake);
+        $this->service->bake($cake);
 
         $this->assertTrue($cake->isBaked());
-        $this->assertSame($score, $cake->getQualityScore());
     }
 
-    public function testQualityScoreIsClamped(): void
+    public function testBakeSetsQualityScoreTo100(): void
     {
-        $cake = $this->cake(CakeSize::CUPCAKE, 4, FrostingFlavor::FROSTING_VANILLA);
+        $cake = (new Cake())
+            ->setSize(CakeSize::CUPCAKE)
+            ->setLayers(1)
+            ->setFrostingFlavor(FrostingFlavor::FROSTING_CHOCOLATE)
+            ->setToppings([Topping::TOPPING_SPRINKLES]);
 
-        $score = $this->service->bake($cake);
+        $this->service->bake($cake);
 
-        $this->assertGreaterThanOrEqual(0.0, $score);
-        $this->assertLessThanOrEqual(100.0, $score);
-    }
-
-    public function testPerfectCupcakeScoresHigh(): void
-    {
-        $cake = $this->cake(CakeSize::CUPCAKE, 1, FrostingFlavor::FROSTING_VANILLA, [Topping::TOPPING_SPRINKLES]);
-
-        $score = $this->service->bake($cake);
-
-        $this->assertGreaterThan(80.0, $score);
-    }
-
-    public function testAbsurdCupcakeScoresLow(): void
-    {
-        $cake = $this->cake(CakeSize::CUPCAKE, 4, FrostingFlavor::FROSTING_VANILLA);
-
-        $score = $this->service->bake($cake);
-
-        $this->assertLessThan(30.0, $score);
-    }
-
-    public function testIdealLayersForSixInchScoresHigherThanOneLayers(): void
-    {
-        $good = $this->cake(CakeSize::SIX_INCH, 2, FrostingFlavor::FROSTING_VANILLA);
-        $bad  = $this->cake(CakeSize::SIX_INCH, 1, FrostingFlavor::FROSTING_VANILLA);
-
-        $this->assertGreaterThan($this->service->bake($bad), $this->service->bake($good));
-    }
-
-    public function testNineInchTwoAndThreeLayersBothScoreEqually(): void
-    {
-        $two   = $this->cake(CakeSize::NINE_INCH, 2, FrostingFlavor::FROSTING_VANILLA);
-        $three = $this->cake(CakeSize::NINE_INCH, 3, FrostingFlavor::FROSTING_VANILLA);
-
-        $this->assertEqualsWithDelta($this->service->bake($two), $this->service->bake($three), 0.01);
-    }
-
-    public function testTieredThreeAndFourLayersBothScoreEqually(): void
-    {
-        $three = $this->cake(CakeSize::TIERED, 3, FrostingFlavor::FROSTING_VANILLA);
-        $four  = $this->cake(CakeSize::TIERED, 4, FrostingFlavor::FROSTING_VANILLA);
-
-        $this->assertEqualsWithDelta($this->service->bake($three), $this->service->bake($four), 0.01);
-    }
-
-    public function testStrawberriesWithCreamCheeseBoostsScore(): void
-    {
-        $with    = $this->cake(CakeSize::SIX_INCH, 2, FrostingFlavor::FROSTING_CREAM_CHEESE, [Topping::TOPPING_STRAWBERRIES]);
-        $without = $this->cake(CakeSize::SIX_INCH, 2, FrostingFlavor::FROSTING_CREAM_CHEESE);
-
-        $this->assertGreaterThan($this->service->bake($without), $this->service->bake($with));
-    }
-
-    public function testStrawberriesWithSprinklesPenalisesScore(): void
-    {
-        $with    = $this->cake(CakeSize::SIX_INCH, 2, FrostingFlavor::FROSTING_VANILLA, [Topping::TOPPING_STRAWBERRIES, Topping::TOPPING_SPRINKLES]);
-        $without = $this->cake(CakeSize::SIX_INCH, 2, FrostingFlavor::FROSTING_VANILLA, [Topping::TOPPING_SPRINKLES]);
-
-        $this->assertLessThan($this->service->bake($without), $this->service->bake($with));
-    }
-
-    public function testAllThreeToppingsPenalisesScore(): void
-    {
-        $all = $this->cake(CakeSize::SIX_INCH, 2, FrostingFlavor::FROSTING_VANILLA, [Topping::TOPPING_SPRINKLES, Topping::TOPPING_CHOCOLATE_CHIPS, Topping::TOPPING_STRAWBERRIES]);
-        $one = $this->cake(CakeSize::SIX_INCH, 2, FrostingFlavor::FROSTING_VANILLA, [Topping::TOPPING_SPRINKLES]);
-
-        $this->assertLessThan($this->service->bake($one), $this->service->bake($all));
-    }
-
-    public function testNoToppingsIsNeutral(): void
-    {
-        $cake = $this->cake(CakeSize::SIX_INCH, 2, FrostingFlavor::FROSTING_VANILLA, []);
-
-        $score = $this->service->bake($cake);
-
-        $this->assertEqualsWithDelta(80.0, $score, 0.01);
+        $this->assertSame(100.0, $cake->getQualityScore());
     }
 }

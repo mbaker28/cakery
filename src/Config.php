@@ -8,7 +8,7 @@ class Config
     public const SPAWN_INTERVAL = 15;
 
     /** Seconds the player has to fulfil an order after it spawns */
-    public const SECONDS_PER_ORDER = 120;
+    public const SECONDS_PER_ORDER = 75;
 
     public const MIN_ORDERS_PER_DAY = 2;
     public const MAX_ORDERS_PER_DAY = 6;

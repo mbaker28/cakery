@@ -1,0 +1,27 @@
+{% set stock = bakery.inventory[item.value] ?? 0 %}
+<div class="col-6 col-md-4 col-lg-2" id="ingredient-{{ item.value }}">
+    <div class="card shadow-sm text-center {{ stock < 2 ? 'border-danger' : '' }}">
+        <div class="card-body py-3 px-2">
+            <div class="fw-semibold small">{{ item.label }}</div>
+            <div class="display-6 my-1 {{ stock < 2 ? 'text-danger fw-bold' : 'text-secondary' }}">{{ stock }}</div>
+            <div class="text-muted small mb-2">${{ item.costPerUnit|number_format(2) }}/unit</div>
+            <form method="post" action="{{ path('game_restock') }}"
+                  data-controller="quantity-cost"
+                  data-quantity-cost-unit-cost-value="{{ item.costPerUnit }}">
+                <input type="hidden" name="ingredient" value="{{ item.value }}">
+                <div class="input-group input-group-sm mb-1">
+                    <input type="number" name="quantity" value="1" min="1" max="999"
+                           class="form-control text-center"
+                           data-quantity-cost-target="quantity"
+                           data-action="input->quantity-cost#update"
+                           {{ bakery.money < item.costPerUnit ? 'disabled' : '' }}>
+                    <button class="btn btn-outline-primary"
+                            {{ bakery.money < item.costPerUnit ? 'disabled' : '' }}>
+                        Buy
+                    </button>
+                </div>
+                <div class="text-muted small" data-quantity-cost-target="total">$0.00</div>
+            </form>
+        </div>
+    </div>
+</div>

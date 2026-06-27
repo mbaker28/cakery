@@ -1,32 +1,21 @@
-<turbo-stream action="replace" target="shop">
+{% if success and item is not null %}
+<turbo-stream action="replace" target="ingredient-{{ item.value }}">
     <template>
-        {{ include('game/_shop.html.twig', {orderId: orderId, cakeId: cakeId}) }}
+        {{ include('game/_shop_card.html.twig') }}
     </template>
 </turbo-stream>
-<turbo-stream action="replace" target="navbar-stats">
-    <template>
-        <div id="navbar-stats" class="d-flex gap-4 text-white small align-items-center">
-            <span>💰 ${{ bakery.money|number_format(2) }}</span>
-            <span>⭐ {{ bakery.reputation }}/100</span>
-            <span>📅 Day {{ bakery.day }}</span>
-        </div>
-    </template>
-</turbo-stream>
-{% if builderContext %}
-<turbo-stream action="replace" target="ingredient-status">
-    <template>
-        {{ include('cake/_ingredient_status.html.twig', builderContext) }}
-    </template>
+<turbo-stream action="update" target="navbar-money">
+    <template>💰 ${{ bakery.money|number_format(2) }}</template>
 </turbo-stream>
 {% endif %}
-{% if toastIngredient %}
+
+{% if message is not null %}
 <turbo-stream action="append" target="toast-container">
     <template>
-        <div class="toast align-items-center text-bg-success border-0" role="alert" data-bs-autohide="true" data-bs-delay="4000">
+        <div class="toast align-items-center text-bg-{{ success ? 'success' : 'danger' }} border-0"
+             role="alert" data-bs-autohide="true" data-bs-delay="3000">
             <div class="d-flex">
-                <div class="toast-body fw-semibold">
-                    Restocked {{ toastQuantity }}× {{ toastIngredient.label }} for ${{ (toastIngredient.costPerUnit * toastQuantity)|number_format(2) }}.
-                </div>
+                <div class="toast-body fw-semibold">{{ message }}</div>
                 <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
             </div>
         </div>

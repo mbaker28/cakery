@@ -9,7 +9,7 @@
             <div id="navbar-stats" class="d-flex gap-4 text-white small align-items-center">
                 <span>💰 ${{ bakery.money|number_format(2) }}</span>
                 <span>⭐ {{ bakery.reputation }}/100</span>
-                <span>📅 Day {{ bakery.day }}</span>
+                <span>📅 Day {{ bakery.day }} / {{ bakery.maxDays }}</span>
             </div>
         </div>
     </nav>
@@ -31,7 +31,12 @@
                     <div class="d-flex justify-content-between align-items-start mb-1">
                         <h5 class="card-title mb-0">{{ order.customerName }}'s Order</h5>
                         {% if order.failsAt %}
-                            <span data-order-timer-target="countdown" class="badge bg-secondary">--:--</span>
+                            <div style="min-width:100px">
+                                <div class="text-end small mb-1" data-order-timer-target="patienceLabel">😊 Excited</div>
+                                <div class="progress" style="height:5px">
+                                    <div class="progress-bar bg-success" data-order-timer-target="patienceBar" style="width:100%"></div>
+                                </div>
+                            </div>
                         {% endif %}
                     </div>
                     {% if order.failsAt %}

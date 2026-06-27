@@ -30,142 +30,170 @@ class OrderServiceTest extends TestCase
 
         $this->order = (new CakeOrder())
             ->setStatus(OrderStatus::IN_PROGRESS)
-            ->setPayout(50.0)
-            ->setHappinessBonus(20)
+            ->setPayout(100.0)
+            ->setHappinessBonus(10)
             ->setRequiredSize(CakeSize::SIX_INCH)
             ->setRequiredFrostingFlavor(FrostingFlavor::FROSTING_VANILLA)
             ->setRequiredLayers(2)
             ->setRequiredToppings([Topping::TOPPING_SPRINKLES]);
     }
 
-    private function matchingCake(float $qualityScore = 100.0): Cake
+    private function matchingCake(): Cake
     {
         return (new Cake())
             ->setIsBaked(true)
-            ->setQualityScore($qualityScore)
+            ->setQualityScore(100.0)
             ->setSize(CakeSize::SIX_INCH)
             ->setFrostingFlavor(FrostingFlavor::FROSTING_VANILLA)
             ->setLayers(2)
             ->setToppings([Topping::TOPPING_SPRINKLES]);
     }
 
-    public function testFulfillScalesPayoutByQuality(): void
+    // ── Perfect match ────────────────────────────────────────────────────────
+
+    public function testPerfectMatchPaysFullPayout(): void
     {
-        $this->order->setCake($this->matchingCake(100.0));
+        $this->order->setCake($this->matchingCake());
 
         $this->service->fulfill($this->order, $this->bakery);
 
-        $this->assertSame(150.0, $this->bakery->getMoney());
-        $this->assertSame(70, $this->bakery->getReputation());
+        $this->assertSame(200.0, $this->bakery->getMoney());
+        $this->assertSame(60, $this->bakery->getReputation());
         $this->assertSame(1, $this->bakery->getOrdersCompleted());
         $this->assertSame(OrderStatus::FULFILLED, $this->order->getStatus());
     }
 
-    public function testFulfillWithPartialQualityScalesPayout(): void
+    // ── Mismatch penalties (quality-based pass/fail) ─────────────────────────
+
+    public function testWrongSizeFailsOrder(): void
     {
-        $this->order->setCake($this->matchingCake(50.0));
-
-        $this->service->fulfill($this->order, $this->bakery);
-
-        $this->assertEqualsWithDelta(125.0, $this->bakery->getMoney(), 0.01);
-        $this->assertSame(OrderStatus::FULFILLED, $this->order->getStatus());
-    }
-
-    public function testFulfillBelowMinQualityFails(): void
-    {
-        $this->order->setCake($this->matchingCake(10.0));
+        $cake = $this->matchingCake()->setSize(CakeSize::CUPCAKE); // -50 → quality 50 < 60
+        $this->order->setCake($cake);
 
         $this->service->fulfill($this->order, $this->bakery);
 
         $this->assertSame(100.0, $this->bakery->getMoney());
         $this->assertSame(40, $this->bakery->getReputation());
-        $this->assertSame(1, $this->bakery->getOrdersFailed());
         $this->assertSame(OrderStatus::FAILED, $this->order->getStatus());
     }
 
-    public function testWrongSizePenalisesQuality(): void
+    public function testWrongFrostingReducesPayoutButPasses(): void
     {
-        $cake = $this->matchingCake(100.0)->setSize(CakeSize::CUPCAKE);
+        // -25 → quality 75 ≥ 60 → payout = 100 × 0.75 × 1.0 = 75
+        $cake = $this->matchingCake()->setFrostingFlavor(FrostingFlavor::FROSTING_CHOCOLATE);
         $this->order->setCake($cake);
 
         $this->service->fulfill($this->order, $this->bakery);
 
-        // effective quality = 100 - 40 = 60, scale = 0.6
-        $this->assertEqualsWithDelta(130.0, $this->bakery->getMoney(), 0.01);
+        $this->assertEqualsWithDelta(175.0, $this->bakery->getMoney(), 0.01);
+        $this->assertSame(OrderStatus::FULFILLED, $this->order->getStatus());
     }
 
-    public function testWrongFrostingPenalisesQuality(): void
+    public function testWrongLayersReducesPayout(): void
     {
-        $cake = $this->matchingCake(100.0)->setFrostingFlavor(FrostingFlavor::FROSTING_CHOCOLATE);
+        // 2 layers off → -20 → quality 80 → payout = 100 × 0.80 × 1.0 = 80
+        $cake = $this->matchingCake()->setLayers(4);
         $this->order->setCake($cake);
 
         $this->service->fulfill($this->order, $this->bakery);
 
-        // effective quality = 100 - 20 = 80, scale = 0.8
-        $this->assertEqualsWithDelta(140.0, $this->bakery->getMoney(), 0.01);
+        $this->assertEqualsWithDelta(180.0, $this->bakery->getMoney(), 0.01);
+        $this->assertSame(OrderStatus::FULFILLED, $this->order->getStatus());
     }
 
-    public function testWrongLayersPenalisesQuality(): void
+    public function testMissingRequiredToppingReducesPayout(): void
     {
-        $cake = $this->matchingCake(100.0)->setLayers(4);
+        // -15 → quality 85 → payout = 100 × 0.85 × 1.0 = 85
+        $cake = $this->matchingCake()->setToppings([]);
         $this->order->setCake($cake);
 
         $this->service->fulfill($this->order, $this->bakery);
 
-        // effective quality = 100 - 15 = 85, scale = 0.85
-        $this->assertEqualsWithDelta(142.5, $this->bakery->getMoney(), 0.01);
+        $this->assertEqualsWithDelta(185.0, $this->bakery->getMoney(), 0.01);
+        $this->assertSame(OrderStatus::FULFILLED, $this->order->getStatus());
     }
 
-    public function testMissingToppingPenalisesQuality(): void
+    public function testExtraToppingAppliesSmallPenaltyButPasses(): void
     {
-        $cake = $this->matchingCake(100.0)->setToppings([]);
+        // required: sprinkles; extra: strawberries → -5 → quality 95 → payout = 100 × 0.95 × 1.0 = 95
+        $cake = $this->matchingCake()->setToppings([Topping::TOPPING_SPRINKLES, Topping::TOPPING_STRAWBERRIES]);
         $this->order->setCake($cake);
 
         $this->service->fulfill($this->order, $this->bakery);
 
-        // effective quality = 100 - 10 = 90, scale = 0.9
-        $this->assertEqualsWithDelta(145.0, $this->bakery->getMoney(), 0.01);
+        $this->assertEqualsWithDelta(195.0, $this->bakery->getMoney(), 0.01);
+        $this->assertSame(OrderStatus::FULFILLED, $this->order->getStatus());
     }
 
-    public function testAllMismatchesCombineAndClampToZero(): void
+    public function testCombinedMismatchesBelowThresholdFailsOrder(): void
     {
-        $cake = $this->matchingCake(60.0)
+        // -50 (size) -25 (frosting) = 25 < 60 → FAIL
+        $cake = $this->matchingCake()
             ->setSize(CakeSize::CUPCAKE)
-            ->setFrostingFlavor(FrostingFlavor::FROSTING_CHOCOLATE)
-            ->setLayers(4)
-            ->setToppings([]);
+            ->setFrostingFlavor(FrostingFlavor::FROSTING_CHOCOLATE);
         $this->order->setCake($cake);
 
-        // effective quality = 60 - 40 - 20 - 15 - 10 = -25, clamped to 0 → fails
         $this->service->fulfill($this->order, $this->bakery);
 
         $this->assertSame(OrderStatus::FAILED, $this->order->getStatus());
+        $this->assertSame(100.0, $this->bakery->getMoney());
     }
 
-    public function testExtraToppingsNotPenalised(): void
+    // ── Time multiplier ───────────────────────────────────────────────────────
+
+    public function testFastFulfillmentAppliesBonus(): void
     {
-        $cake = $this->matchingCake(100.0)->setToppings([Topping::TOPPING_SPRINKLES, Topping::TOPPING_STRAWBERRIES]);
-        $this->order->setCake($cake);
+        $now = new \DateTimeImmutable();
+        $this->order
+            ->setCake($this->matchingCake())
+            ->setSpawnAt($now->modify('-20 seconds'))   // 20s elapsed of 120s = 17% → fast
+            ->setFailsAt($now->modify('+100 seconds'));
 
-        $this->service->fulfill($this->order, $this->bakery);
+        $earned = $this->service->fulfill($this->order, $this->bakery);
 
-        // no penalty — required topping is present, extra is fine
-        $this->assertSame(150.0, $this->bakery->getMoney());
+        $this->assertEqualsWithDelta(120.0, $earned, 0.01);           // 100 × 1.2
+        $this->assertEqualsWithDelta(220.0, $this->bakery->getMoney(), 0.01);
     }
 
-    public function testFulfillThrowsIfCakesNotBaked(): void
+    public function testSlowFulfillmentAppliesPenalty(): void
     {
-        $this->order->setCake((new Cake())->setIsBaked(false));
+        $now = new \DateTimeImmutable();
+        $this->order
+            ->setCake($this->matchingCake())
+            ->setSpawnAt($now->modify('-100 seconds'))  // 100s elapsed of 120s = 83% → slow
+            ->setFailsAt($now->modify('+20 seconds'));
 
-        $this->expectException(\LogicException::class);
-        $this->service->fulfill($this->order, $this->bakery);
+        $earned = $this->service->fulfill($this->order, $this->bakery);
+
+        $this->assertEqualsWithDelta(85.0, $earned, 0.01);            // 100 × 0.85
+        $this->assertEqualsWithDelta(185.0, $this->bakery->getMoney(), 0.01);
     }
 
-    public function testFulfillThrowsIfNoCakes(): void
+    public function testNormalSpeedPaysExactPayout(): void
     {
-        $this->expectException(\LogicException::class);
-        $this->service->fulfill($this->order, $this->bakery);
+        $now = new \DateTimeImmutable();
+        $this->order
+            ->setCake($this->matchingCake())
+            ->setSpawnAt($now->modify('-60 seconds'))   // 60s elapsed of 120s = 50% → normal
+            ->setFailsAt($now->modify('+60 seconds'));
+
+        $earned = $this->service->fulfill($this->order, $this->bakery);
+
+        $this->assertEqualsWithDelta(100.0, $earned, 0.01);
+        $this->assertEqualsWithDelta(200.0, $this->bakery->getMoney(), 0.01);
     }
+
+    public function testNoTimerDefaultsToFullPayout(): void
+    {
+        // Order with no spawnAt/failsAt → multiplier = 1.0
+        $this->order->setCake($this->matchingCake());
+
+        $earned = $this->service->fulfill($this->order, $this->bakery);
+
+        $this->assertSame(100.0, $earned);
+    }
+
+    // ── fail() ───────────────────────────────────────────────────────────────
 
     public function testFailDeductsReputationAndIncrementsOrdersFailed(): void
     {
@@ -185,13 +213,29 @@ class OrderServiceTest extends TestCase
         $this->assertSame(0, $this->bakery->getReputation());
     }
 
+    // ── Edge cases ────────────────────────────────────────────────────────────
+
     public function testFulfillClampsReputationAt100(): void
     {
         $this->bakery->setReputation(95);
-        $this->order->setCake($this->matchingCake(100.0));
+        $this->order->setCake($this->matchingCake());
 
         $this->service->fulfill($this->order, $this->bakery);
 
         $this->assertSame(100, $this->bakery->getReputation());
+    }
+
+    public function testFulfillThrowsIfCakeNotBaked(): void
+    {
+        $this->order->setCake((new Cake())->setIsBaked(false));
+
+        $this->expectException(\LogicException::class);
+        $this->service->fulfill($this->order, $this->bakery);
+    }
+
+    public function testFulfillThrowsIfNoCake(): void
+    {
+        $this->expectException(\LogicException::class);
+        $this->service->fulfill($this->order, $this->bakery);
     }
 }

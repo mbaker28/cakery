@@ -1,7 +1,7 @@
 import { Controller } from '@hotwired/stimulus';
 
 export default class extends Controller {
-    static targets = ['countdown', 'expireForm'];
+    static targets = ['patienceBar', 'patienceLabel', 'expireForm'];
     static values  = { spawnAt: Number, failsAt: Number, serverNow: Number };
 
     connect() {
@@ -24,17 +24,26 @@ export default class extends Controller {
 
         if (this.element.classList.contains('d-none')) return;
 
+        const total     = this.failsAtValue - this.spawnAtValue;
         const remaining = Math.max(0, this.failsAtValue - now);
-        const mins      = Math.floor(remaining / 60);
-        const secs      = Math.floor(remaining % 60);
+        const fraction  = total > 0 ? remaining / total : 0;
 
-        if (this.hasCountdownTarget) {
-            this.countdownTarget.textContent = String(mins).padStart(2, '0') + ':' + String(secs).padStart(2, '0');
-            this.countdownTarget.className = 'badge ' + (
-                remaining <= 30  ? 'bg-danger text-white' :
-                remaining <= 60  ? 'bg-warning text-dark' :
-                                   'bg-secondary text-white'
+        if (this.hasPatienceBarTarget) {
+            this.patienceBarTarget.style.width = `${fraction * 100}%`;
+            this.patienceBarTarget.className = 'progress-bar ' + (
+                fraction > 0.6 ? 'bg-success' :
+                fraction > 0.3 ? 'bg-warning' :
+                                 'bg-danger'
             );
+        }
+
+        if (this.hasPatienceLabelTarget) {
+            this.patienceLabelTarget.textContent =
+                fraction > 0.75 ? '😊 Excited' :
+                fraction > 0.50 ? '🙂 Happy'   :
+                fraction > 0.30 ? '😐 Waiting…' :
+                fraction > 0.15 ? '😤 Impatient' :
+                                  '😡 Leaving soon!';
         }
 
         if (remaining <= 0 && !this.expired) {
