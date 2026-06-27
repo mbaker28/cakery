@@ -81,8 +81,8 @@ class OrderGeneratorService
     // Higher max tier unlocks harder orders but simpler orders still appear.
     private const TIER_WEIGHTS = [
         1 => [100, 0,  0],
-        2 => [40,  60, 0],
-        3 => [20,  40, 40],
+        2 => [60,  40, 0],
+        3 => [50,  30, 20],
     ];
 
     private function tier(int $reputation): int
