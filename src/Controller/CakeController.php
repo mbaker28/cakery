@@ -2,8 +2,10 @@
 
 namespace App\Controller;
 
+use App\Config;
 use App\Entity\Cake;
 use App\Entity\CakeOrder;
+use App\Enum\CakeBuildPhase;
 use App\Enum\CakeSize;
 use App\Enum\FrostingFlavor;
 use App\Enum\Ingredient;
@@ -61,6 +63,11 @@ class CakeController extends AbstractController
     public function setSize(CakeOrder $order, int $cakeId, Request $request): Response
     {
         $cake = $this->getCakeOr404($order, $cakeId);
+
+        if ($cake->getBuildPhase() !== CakeBuildPhase::MIXING) {
+            return $this->renderBuilder($order, $cake);
+        }
+
         $size = CakeSize::tryFrom($request->request->getString('size'));
 
         if ($size !== null) {
@@ -74,7 +81,12 @@ class CakeController extends AbstractController
     #[Route('/{cakeId}/frosting', name: 'cake_set_frosting', requirements: ['cakeId' => '\d+'], methods: ['POST'])]
     public function setFrosting(CakeOrder $order, int $cakeId, Request $request): Response
     {
-        $cake   = $this->getCakeOr404($order, $cakeId);
+        $cake = $this->getCakeOr404($order, $cakeId);
+
+        if ($cake->getBuildPhase() !== CakeBuildPhase::DECORATING) {
+            return $this->renderBuilder($order, $cake);
+        }
+
         $flavor = FrostingFlavor::tryFrom($request->request->getString('flavor'));
 
         if ($flavor !== null) {
@@ -88,7 +100,12 @@ class CakeController extends AbstractController
     #[Route('/{cakeId}/layers', name: 'cake_set_layers', requirements: ['cakeId' => '\d+'], methods: ['POST'])]
     public function setLayers(CakeOrder $order, int $cakeId, Request $request): Response
     {
-        $cake   = $this->getCakeOr404($order, $cakeId);
+        $cake = $this->getCakeOr404($order, $cakeId);
+
+        if ($cake->getBuildPhase() !== CakeBuildPhase::MIXING) {
+            return $this->renderBuilder($order, $cake);
+        }
+
         $layers = $request->request->getInt('layers');
 
         if ($layers >= 1 && $layers <= 5) {
@@ -102,7 +119,12 @@ class CakeController extends AbstractController
     #[Route('/{cakeId}/topping', name: 'cake_toggle_topping', requirements: ['cakeId' => '\d+'], methods: ['POST'])]
     public function toggleTopping(CakeOrder $order, int $cakeId, Request $request): Response
     {
-        $cake    = $this->getCakeOr404($order, $cakeId);
+        $cake = $this->getCakeOr404($order, $cakeId);
+
+        if ($cake->getBuildPhase() !== CakeBuildPhase::DECORATING) {
+            return $this->renderBuilder($order, $cake);
+        }
+
         $topping = Topping::tryFrom($request->request->getString('topping'));
 
         if ($topping !== null) {
@@ -119,18 +141,63 @@ class CakeController extends AbstractController
         return $this->renderBuilder($order, $cake);
     }
 
+    #[Route('/{cakeId}/start-baking', name: 'cake_start_baking', requirements: ['cakeId' => '\d+'], methods: ['POST'])]
+    public function startBaking(CakeOrder $order, int $cakeId): Response
+    {
+        $cake = $this->getCakeOr404($order, $cakeId);
+
+        if ($cake->getBuildPhase() !== CakeBuildPhase::MIXING
+            || $cake->getSize() === null
+            || $cake->getLayers() === null
+        ) {
+            return $this->redirectToRoute('cake_edit', ['id' => $order->getId(), 'cakeId' => $cake->getId()]);
+        }
+
+        $cake->setBuildPhase(CakeBuildPhase::BAKING);
+        $cake->setBakingStartedAt(new \DateTimeImmutable());
+        $this->em->flush();
+
+        return $this->redirectToRoute('cake_edit', ['id' => $order->getId(), 'cakeId' => $cake->getId()]);
+    }
+
+    #[Route('/{cakeId}/done-baking', name: 'cake_done_baking', requirements: ['cakeId' => '\d+'], methods: ['POST'])]
+    public function doneBaking(CakeOrder $order, int $cakeId): Response
+    {
+        $cake = $this->getCakeOr404($order, $cakeId);
+
+        if ($cake->getBuildPhase() !== CakeBuildPhase::BAKING) {
+            return $this->redirectToRoute('cake_edit', ['id' => $order->getId(), 'cakeId' => $cake->getId()]);
+        }
+
+        $startedAt = $cake->getBakingStartedAt();
+        $elapsed   = $startedAt ? (new \DateTimeImmutable())->getTimestamp() - $startedAt->getTimestamp() : 0;
+
+        if ($elapsed < Config::BAKING_SECONDS) {
+            return $this->redirectToRoute('cake_edit', ['id' => $order->getId(), 'cakeId' => $cake->getId()]);
+        }
+
+        $this->bakingService->bake($cake);
+        $cake->setBuildPhase(CakeBuildPhase::DECORATING);
+        $this->em->flush();
+
+        return $this->redirectToRoute('cake_edit', ['id' => $order->getId(), 'cakeId' => $cake->getId()]);
+    }
+
     #[Route('/{cakeId}/bake', name: 'cake_bake', requirements: ['cakeId' => '\d+'], methods: ['POST'])]
     public function bake(CakeOrder $order, int $cakeId): Response
     {
         $cake   = $this->getCakeOr404($order, $cakeId);
         $bakery = $this->bakeryRepository->findOneBy([]);
 
+        if ($cake->getBuildPhase() !== CakeBuildPhase::DECORATING) {
+            return $this->redirectToRoute('cake_edit', ['id' => $order->getId(), 'cakeId' => $cake->getId()]);
+        }
+
         if ($bakery === null || !$this->inventoryService->canBake($cake, $bakery)) {
-            return $this->renderBuilder($order, $cake);
+            return $this->renderBuilder($order, $cake, fullPage: true);
         }
 
         $this->inventoryService->deduct($cake, $bakery);
-        $this->bakingService->bake($cake);
         $earned = $this->orderService->fulfill($order, $bakery);
 
         $this->em->flush();
@@ -153,7 +220,7 @@ class CakeController extends AbstractController
 
     private function renderBuilder(CakeOrder $order, Cake $cake, bool $fullPage = false): Response
     {
-        $bakery = $this->bakeryRepository->findOneBy([]);
+        $bakery   = $this->bakeryRepository->findOneBy([]);
         $allItems = [...Ingredient::cases(), ...FrostingFlavor::cases(), ...Topping::cases()];
         $unitMap  = array_column(array_map(
             fn($item) => [$item->inventoryKey(), $item->unit()],
@@ -161,16 +228,17 @@ class CakeController extends AbstractController
         ), 1, 0);
 
         $params = [
-            'order'        => $order,
-            'cake'         => $cake,
-            'bakery'       => $bakery,
-            'sizes'        => CakeSize::cases(),
-            'flavors'      => FrostingFlavor::cases(),
-            'toppings'     => Topping::cases(),
-            'restockables' => $allItems,
-            'unitMap'      => $unitMap,
-            'canBake'      => $bakery && $this->inventoryService->canBake($cake, $bakery),
-            'serverNow'    => (new \DateTimeImmutable())->getTimestamp(),
+            'order'          => $order,
+            'cake'           => $cake,
+            'bakery'         => $bakery,
+            'sizes'          => CakeSize::cases(),
+            'flavors'        => FrostingFlavor::cases(),
+            'toppings'       => Topping::cases(),
+            'restockables'   => $allItems,
+            'unitMap'        => $unitMap,
+            'canBake'        => $bakery && $this->inventoryService->canBake($cake, $bakery),
+            'serverNow'      => (new \DateTimeImmutable())->getTimestamp(),
+            'bakingDuration' => Config::BAKING_SECONDS,
         ];
 
         try {

@@ -19,16 +19,25 @@
         {% endif %}
     </div>
 
-    <form method="post" action="{{ path('cake_bake', {id: order.id, cakeId: cake.id}) }}" data-turbo-frame="_top">
-        <button
-            class="btn btn-success w-100"
-            {{ not canBake or not cake.size or not cake.frostingFlavor or not cake.layers ? 'disabled' : '' }}
-        >
-            🔥 Bake & Submit
-        </button>
-    </form>
-
-    {% if not canBake %}
-        <p class="text-danger small mt-2 mb-0">Not enough ingredients.</p>
+    {% if cake.buildPhase.value == 'mixing' %}
+        <form method="post" action="{{ path('cake_start_baking', {id: order.id, cakeId: cake.id}) }}" data-turbo-frame="_top">
+            <button class="btn btn-warning w-100"
+                    {{ not cake.size or not cake.layers or not canBake ? 'disabled' : '' }}>
+                🔥 Put in Oven
+            </button>
+        </form>
+        {% if cake.size and cake.layers and not canBake %}
+            <p class="text-danger small mt-2 mb-0">Not enough ingredients.</p>
+        {% endif %}
+    {% else %}
+        <form method="post" action="{{ path('cake_bake', {id: order.id, cakeId: cake.id}) }}" data-turbo-frame="_top">
+            <button class="btn btn-success w-100"
+                    {{ not canBake or not cake.frostingFlavor ? 'disabled' : '' }}>
+                ✅ Submit Order
+            </button>
+        </form>
+        {% if not canBake %}
+            <p class="text-danger small mt-2 mb-0">Not enough ingredients.</p>
+        {% endif %}
     {% endif %}
 </div>

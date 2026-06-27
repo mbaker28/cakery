@@ -2,6 +2,7 @@
 
 namespace App\Entity;
 
+use App\Enum\CakeBuildPhase;
 use App\Enum\CakeSize;
 use App\Enum\FrostingFlavor;
 use App\Enum\Topping;
@@ -34,6 +35,12 @@ class Cake
 
     #[ORM\Column]
     private bool $isBaked = false;
+
+    #[ORM\Column(enumType: CakeBuildPhase::class, length: 20)]
+    private CakeBuildPhase $buildPhase = CakeBuildPhase::MIXING;
+
+    #[ORM\Column(nullable: true)]
+    private ?\DateTimeImmutable $bakingStartedAt = null;
 
     #[ORM\OneToOne(inversedBy: 'cake')]
     #[ORM\JoinColumn(nullable: false)]
@@ -122,6 +129,30 @@ class Cake
     public function setIsBaked(bool $isBaked): static
     {
         $this->isBaked = $isBaked;
+
+        return $this;
+    }
+
+    public function getBuildPhase(): CakeBuildPhase
+    {
+        return $this->buildPhase;
+    }
+
+    public function setBuildPhase(CakeBuildPhase $buildPhase): static
+    {
+        $this->buildPhase = $buildPhase;
+
+        return $this;
+    }
+
+    public function getBakingStartedAt(): ?\DateTimeImmutable
+    {
+        return $this->bakingStartedAt;
+    }
+
+    public function setBakingStartedAt(?\DateTimeImmutable $bakingStartedAt): static
+    {
+        $this->bakingStartedAt = $bakingStartedAt;
 
         return $this;
     }

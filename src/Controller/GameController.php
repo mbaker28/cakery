@@ -50,9 +50,10 @@ class GameController extends AbstractController
         $orders = $this->cakeOrderRepository->findActiveOrders();
 
         return $this->render('game/index.html.twig', [
-            'bakery'    => $bakery,
-            'orders'    => $orders,
-            'serverNow' => $now->getTimestamp(),
+            'bakery'         => $bakery,
+            'orders'         => $orders,
+            'serverNow'      => $now->getTimestamp(),
+            'bakingDuration' => Config::BAKING_SECONDS,
         ]);
     }
 
