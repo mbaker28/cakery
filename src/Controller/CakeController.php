@@ -154,6 +154,12 @@ class CakeController extends AbstractController
     private function renderBuilder(CakeOrder $order, Cake $cake, bool $fullPage = false): Response
     {
         $bakery = $this->bakeryRepository->findOneBy([]);
+        $allItems = [...Ingredient::cases(), ...FrostingFlavor::cases(), ...Topping::cases()];
+        $unitMap  = array_column(array_map(
+            fn($item) => [$item->inventoryKey(), $item->unit()],
+            $allItems
+        ), 1, 0);
+
         $params = [
             'order'        => $order,
             'cake'         => $cake,
@@ -161,7 +167,8 @@ class CakeController extends AbstractController
             'sizes'        => CakeSize::cases(),
             'flavors'      => FrostingFlavor::cases(),
             'toppings'     => Topping::cases(),
-            'restockables' => [...Ingredient::cases(), ...FrostingFlavor::cases(), ...Topping::cases()],
+            'restockables' => $allItems,
+            'unitMap'      => $unitMap,
             'canBake'      => $bakery && $this->inventoryService->canBake($cake, $bakery),
             'serverNow'    => (new \DateTimeImmutable())->getTimestamp(),
         ];

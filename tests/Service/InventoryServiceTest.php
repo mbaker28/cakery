@@ -47,7 +47,7 @@ class InventoryServiceTest extends TestCase
     {
         $requirements = $this->service->getRequirements($this->cake(CakeSize::SIX_INCH, 2));
 
-        $this->assertSame(['flour' => 4, 'butter' => 2, 'eggs' => 2, 'sugar' => 2, 'milk' => 2], $requirements);
+        $this->assertSame(['flour' => 2, 'butter' => 4, 'eggs' => 1, 'sugar' => 1, 'milk' => 1], $requirements);
     }
 
     public function testLargerCakesRequireMoreIngredients(): void
@@ -136,7 +136,7 @@ class InventoryServiceTest extends TestCase
         $this->service->restock(Ingredient::FLOUR, 10, $this->bakery);
 
         $this->assertSame(30, $this->bakery->getInventory()['flour']);
-        $this->assertEqualsWithDelta(100.0 - (10 * 0.50), $this->bakery->getMoney(), 0.01);
+        $this->assertEqualsWithDelta(100.0 - (10 * Ingredient::FLOUR->costPerUnit()), $this->bakery->getMoney(), 0.01);
     }
 
     public function testRestockThrowsWithInsufficientFunds(): void

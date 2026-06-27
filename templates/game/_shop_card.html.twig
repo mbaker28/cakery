@@ -4,7 +4,7 @@
         <div class="card-body py-3 px-2">
             <div class="fw-semibold small">{{ item.label }}</div>
             <div class="display-6 my-1 {{ stock < 2 ? 'text-danger fw-bold' : 'text-secondary' }}">{{ stock }}</div>
-            <div class="text-muted small mb-2">${{ item.costPerUnit|number_format(2) }}/unit</div>
+            <div class="text-muted small mb-2">{{ stock == 1 ? item.unit : item.unit ~ 's' }} &middot; ${{ item.costPerUnit|number_format(2) }}/{{ item.unit }}</div>
             <form method="post" action="{{ path('game_restock') }}"
                   data-controller="quantity-cost"
                   data-quantity-cost-unit-cost-value="{{ item.costPerUnit }}">

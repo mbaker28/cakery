@@ -22,6 +22,15 @@ enum Topping: string implements Restockable
         };
     }
 
+    public function unit(): string
+    {
+        return match($this) {
+            self::TOPPING_SPRINKLES       => 'bottle',
+            self::TOPPING_CHOCOLATE_CHIPS => 'bag',
+            self::TOPPING_STRAWBERRIES    => 'pint',
+        };
+    }
+
     public function costPerUnit(): float
     {
         return 1.00;

@@ -48,11 +48,11 @@ class Bakery
      */
     #[ORM\Column]
     private array $inventory = [
-        Ingredient::FLOUR->value  => 10,
-        Ingredient::BUTTER->value => 5,
-        Ingredient::EGGS->value   => 5,
-        Ingredient::SUGAR->value  => 5,
-        Ingredient::MILK->value   => 5,
+        Ingredient::FLOUR->value  => 5,   // bags
+        Ingredient::BUTTER->value => 24,  // tbsp (≈ 3 sticks)
+        Ingredient::EGGS->value   => 12,  // eggs (1 dozen)
+        Ingredient::SUGAR->value  => 4,   // bags
+        Ingredient::MILK->value   => 4,   // cups
         FrostingFlavor::FROSTING_CHOCOLATE->value    => 3,
         FrostingFlavor::FROSTING_VANILLA->value      => 3,
         FrostingFlavor::FROSTING_CREAM_CHEESE->value => 3,

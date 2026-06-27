@@ -26,14 +26,25 @@ enum Ingredient: string implements Restockable
         };
     }
 
+    public function unit(): string
+    {
+        return match($this) {
+            self::FLOUR   => 'bag',
+            self::BUTTER  => 'tbsp',
+            self::EGGS    => 'egg',
+            self::SUGAR   => 'bag',
+            self::MILK    => 'cup',
+        };
+    }
+
     public function costPerUnit(): float
     {
         return match($this) {
-            self::FLOUR   => 0.50,
-            self::BUTTER  => 1.20,
-            self::EGGS    => 0.25,
-            self::SUGAR   => 0.40,
-            self::MILK    => 0.80,
+            self::FLOUR   => 0.30,  // per bag
+            self::BUTTER  => 0.15,  // per tablespoon
+            self::EGGS    => 0.35,  // per egg
+            self::SUGAR   => 0.25,  // per bag
+            self::MILK    => 0.60,  // per cup
         };
     }
 

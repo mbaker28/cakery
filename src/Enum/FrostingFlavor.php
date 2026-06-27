@@ -22,6 +22,11 @@ enum FrostingFlavor: string implements Restockable
         };
     }
 
+    public function unit(): string
+    {
+        return 'container';
+    }
+
     public function costPerUnit(): float
     {
         return 1.50;

@@ -9,18 +9,18 @@ use App\Enum\Restockable;
 class InventoryService
 {
     private const BASE_REQUIREMENTS = [
-        'flour'  => 2,
-        'butter' => 1,
-        'eggs'   => 1,
-        'sugar'  => 1,
-        'milk'   => 1,
+        'flour'  => 2,    // bags
+        'butter' => 4,    // tablespoons
+        'eggs'   => 1,    // eggs
+        'sugar'  => 1,    // bags
+        'milk'   => 1,    // cups
     ];
 
     private const SIZE_MULTIPLIER = [
-        'cupcake' => 0.5,
-        '6"'      => 1.0,
-        '9"'      => 1.5,
-        'tiered'  => 2.5,
+        'cupcake' => 0.25,
+        '6"'      => 0.5,
+        '9"'      => 1.0,
+        'tiered'  => 1.5,
     ];
 
     /** @return array<string, int> */
