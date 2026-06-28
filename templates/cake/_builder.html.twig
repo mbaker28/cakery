@@ -1,108 +1,133 @@
 <turbo-frame id="cake-builder">
     <div class="card shadow-sm">
         <div class="card-body">
+            <div class="d-flex gap-3">
 
-            {% if cake.buildPhase.value == 'mixing' %}
+                {# Preview column #}
+                <div style="width:44%;flex-shrink:0">
+                    <canvas
+                        style="display:block;width:100%;height:180px;border-radius:8px;border:1px solid #E8E3DC;"
+                        data-controller="cake-preview"
+                        data-cake-preview-size-value="{{ cake.size ? cake.size.value : '' }}"
+                        data-cake-preview-layers-value="{{ cake.layers ?? 0 }}"
+                        data-cake-preview-frosting-value="{{ cake.frostingFlavor ? cake.frostingFlavor.value : '' }}"
+                        data-cake-preview-toppings-value="{{ (cake.toppings ?? [])|map(t => t.value)|json_encode }}"
+                        data-cake-preview-phase-value="{{ cake.buildPhase.value }}">
+                    </canvas>
+                    <div class="text-center mt-2 text-muted" style="font-size:0.7rem;line-height:1.4">
+                        {% if cake.size %}
+                            {{ cake.size.value }}
+                            {%- if cake.layers %} · {{ cake.layers }} layer{{ cake.layers > 1 ? 's' : '' }}{% endif %}
+                            {%- if cake.frostingFlavor and cake.buildPhase.value == 'decorating' %} · {{ cake.frostingFlavor.label }}{% endif %}
+                        {% else %}
+                            Your cake
+                        {% endif %}
+                    </div>
+                </div>
 
-                <h5 class="card-title mb-4">🥣 Step 1: Mix</h5>
+                <div class="border-start"></div>
 
-                {# Size #}
-                <div class="mb-4">
-                    <label class="form-label fw-semibold">Size</label>
-                    <div class="d-flex gap-2 flex-wrap">
-                        {% for size in sizes %}
-                            <form method="post" action="{{ path('cake_set_size', {id: order.id, cakeId: cake.id}) }}">
-                                <input type="hidden" name="size" value="{{ size.value }}">
-                                <button class="btn btn-sm {{ cake.size == size ? 'btn-primary' : 'btn-outline-secondary' }}">
-                                    {{ size.value }}
-                                </button>
+                {# Controls column #}
+                <div class="flex-grow-1" style="min-width:0">
+
+                    {% if cake.buildPhase.value == 'mixing' %}
+
+                        <h6 class="fw-semibold mb-3">🥣 Step 1: Mix</h6>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold small">Size</label>
+                            <div class="d-flex gap-2 flex-wrap">
+                                {% for size in sizes %}
+                                    <form method="post" action="{{ path('cake_set_size', {id: order.id, cakeId: cake.id}) }}">
+                                        <input type="hidden" name="size" value="{{ size.value }}">
+                                        <button class="btn btn-sm {{ cake.size == size ? 'btn-primary' : 'btn-outline-secondary' }}">
+                                            {{ size.value }}
+                                        </button>
+                                    </form>
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold small">Layers</label>
+                            <div class="d-flex gap-2">
+                                {% for i in 1..5 %}
+                                    <form method="post" action="{{ path('cake_set_layers', {id: order.id, cakeId: cake.id}) }}">
+                                        <input type="hidden" name="layers" value="{{ i }}">
+                                        <button class="btn btn-sm {{ cake.layers == i ? 'btn-primary' : 'btn-outline-secondary' }}">
+                                            {{ i }}
+                                        </button>
+                                    </form>
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                        {{ include('cake/_ingredient_status.html.twig') }}
+
+                    {% elseif cake.buildPhase.value == 'baking' %}
+
+                        <h6 class="fw-semibold mb-3">🔥 Step 2: Bake</h6>
+
+                        <div class="text-center py-2"
+                             data-controller="baking-timer"
+                             data-baking-timer-started-at-value="{{ cake.bakingStartedAt.timestamp }}"
+                             data-baking-timer-duration-value="{{ bakingDuration }}"
+                             data-baking-timer-server-now-value="{{ serverNow }}">
+
+                            <div class="fw-semibold mb-3" data-baking-timer-target="label">Baking…</div>
+                            <div class="progress mb-1" style="height:10px">
+                                <div class="progress-bar bg-warning progress-bar-striped progress-bar-animated"
+                                     data-baking-timer-target="progressBar"
+                                     style="width:0%"></div>
+                            </div>
+                            <div class="text-muted small mb-3" data-baking-timer-target="seconds">{{ bakingDuration }}s remaining</div>
+
+                            <form method="post"
+                                  action="{{ path('cake_done_baking', {id: order.id, cakeId: cake.id}) }}"
+                                  data-baking-timer-target="doneForm"
+                                  data-turbo-frame="_top"
+                                  class="d-none">
                             </form>
-                        {% endfor %}
-                    </div>
+                        </div>
+
+                    {% else %}
+
+                        <h6 class="fw-semibold mb-3">🎨 Step 3: Decorate</h6>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold small">Frosting</label>
+                            <div class="d-flex gap-2 flex-wrap">
+                                {% for flavor in flavors %}
+                                    <form method="post" action="{{ path('cake_set_frosting', {id: order.id, cakeId: cake.id}) }}">
+                                        <input type="hidden" name="flavor" value="{{ flavor.value }}">
+                                        <button class="btn btn-sm {{ cake.frostingFlavor == flavor ? 'btn-primary' : 'btn-outline-secondary' }}">
+                                            {{ flavor.label }}
+                                        </button>
+                                    </form>
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold small">Toppings</label>
+                            <div class="d-flex gap-2 flex-wrap">
+                                {% for topping in toppings %}
+                                    <form method="post" action="{{ path('cake_toggle_topping', {id: order.id, cakeId: cake.id}) }}">
+                                        <input type="hidden" name="topping" value="{{ topping.value }}">
+                                        <button class="btn btn-sm {{ cake.toppings and topping in cake.toppings ? 'btn-primary' : 'btn-outline-secondary' }}">
+                                            {{ topping.label }}
+                                        </button>
+                                    </form>
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                        {{ include('cake/_ingredient_status.html.twig') }}
+
+                    {% endif %}
+
                 </div>
-
-                {# Layers #}
-                <div class="mb-4">
-                    <label class="form-label fw-semibold">Layers</label>
-                    <div class="d-flex gap-2">
-                        {% for i in 1..5 %}
-                            <form method="post" action="{{ path('cake_set_layers', {id: order.id, cakeId: cake.id}) }}">
-                                <input type="hidden" name="layers" value="{{ i }}">
-                                <button class="btn btn-sm {{ cake.layers == i ? 'btn-primary' : 'btn-outline-secondary' }}">
-                                    {{ i }}
-                                </button>
-                            </form>
-                        {% endfor %}
-                    </div>
-                </div>
-
-                {{ include('cake/_ingredient_status.html.twig') }}
-
-            {% elseif cake.buildPhase.value == 'baking' %}
-
-                <h5 class="card-title mb-3">🔥 Step 2: Bake</h5>
-
-                <div class="text-center py-3"
-                     data-controller="baking-timer"
-                     data-baking-timer-started-at-value="{{ cake.bakingStartedAt.timestamp }}"
-                     data-baking-timer-duration-value="{{ bakingDuration }}"
-                     data-baking-timer-server-now-value="{{ serverNow }}">
-
-                    <div class="display-4 mb-2">🎂</div>
-                    <div class="fw-semibold mb-3" data-baking-timer-target="label">Baking…</div>
-                    <div class="progress mb-1" style="height:10px">
-                        <div class="progress-bar bg-warning progress-bar-striped progress-bar-animated"
-                             data-baking-timer-target="progressBar"
-                             style="width:0%"></div>
-                    </div>
-                    <div class="text-muted small mb-3" data-baking-timer-target="seconds">{{ bakingDuration }}s remaining</div>
-
-                    <form method="post"
-                          action="{{ path('cake_done_baking', {id: order.id, cakeId: cake.id}) }}"
-                          data-baking-timer-target="doneForm"
-                          data-turbo-frame="_top"
-                          class="d-none">
-                    </form>
-                </div>
-
-            {% else %}
-
-                <h5 class="card-title mb-4">🎨 Step 3: Decorate</h5>
-
-                {# Frosting #}
-                <div class="mb-4">
-                    <label class="form-label fw-semibold">Frosting</label>
-                    <div class="d-flex gap-2 flex-wrap">
-                        {% for flavor in flavors %}
-                            <form method="post" action="{{ path('cake_set_frosting', {id: order.id, cakeId: cake.id}) }}">
-                                <input type="hidden" name="flavor" value="{{ flavor.value }}">
-                                <button class="btn btn-sm {{ cake.frostingFlavor == flavor ? 'btn-primary' : 'btn-outline-secondary' }}">
-                                    {{ flavor.label }}
-                                </button>
-                            </form>
-                        {% endfor %}
-                    </div>
-                </div>
-
-                {# Toppings #}
-                <div class="mb-4">
-                    <label class="form-label fw-semibold">Toppings</label>
-                    <div class="d-flex gap-2 flex-wrap">
-                        {% for topping in toppings %}
-                            <form method="post" action="{{ path('cake_toggle_topping', {id: order.id, cakeId: cake.id}) }}">
-                                <input type="hidden" name="topping" value="{{ topping.value }}">
-                                <button class="btn btn-sm {{ cake.toppings and topping in cake.toppings ? 'btn-primary' : 'btn-outline-secondary' }}">
-                                    {{ topping.label }}
-                                </button>
-                            </form>
-                        {% endfor %}
-                    </div>
-                </div>
-
-                {{ include('cake/_ingredient_status.html.twig') }}
-
-            {% endif %}
-
+            </div>
         </div>
     </div>
 </turbo-frame>
