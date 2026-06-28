@@ -54,7 +54,7 @@ class OrderGeneratorService
     {
         $tier     = $this->tier($reputation);
         $size     = $this->pick(self::SIZES_BY_TIER[$tier]);
-        $layers   = random_int(...self::LAYERS_BY_TIER[$tier]);
+        $layers   = $size === CakeSize::CUPCAKE ? 1 : random_int(...self::LAYERS_BY_TIER[$tier]);
         $frosting = $this->pick(FrostingFlavor::cases());
         $toppings = $this->randomToppings($tier);
 

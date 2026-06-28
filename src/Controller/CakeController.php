@@ -72,6 +72,9 @@ class CakeController extends AbstractController
 
         if ($size !== null) {
             $cake->setSize($size);
+            if ($size === CakeSize::CUPCAKE) {
+                $cake->setLayers(1);
+            }
             $this->em->flush();
         }
 

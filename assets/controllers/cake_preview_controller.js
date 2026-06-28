@@ -94,10 +94,10 @@ export default class extends Controller {
         this._rr(ctx, W / 2 - 52, H / 2 - 16, 104, 32, 6);
         ctx.fill();
         ctx.stroke();
-        ctx.fillStyle     = '#9A948C';
-        ctx.font          = '11px system-ui, sans-serif';
-        ctx.textAlign     = 'center';
-        ctx.textBaseline  = 'middle';
+        ctx.fillStyle    = '#9A948C';
+        ctx.font         = '11px system-ui, sans-serif';
+        ctx.textAlign    = 'center';
+        ctx.textBaseline = 'middle';
         ctx.fillText('Choose a size', W / 2, H / 2);
     }
 
@@ -147,72 +147,108 @@ export default class extends Controller {
     }
 
     _cupcake(ctx, W, H, layers, frosting, decor, toppings) {
-        const cw = Math.round(W * 0.44);
-        const cx = Math.round((W - cw) / 2);
-        const ch = 48;
-        const cy = H - ch - 12;
-        const bh = 22 + Math.min(10, (layers - 1) * 3);
-        const bx = cx + Math.round(cw * 0.07);
-        const bw = Math.round(cw * 0.86);
-        const by = cy - bh;
+        // Wrapper geometry — wide at rim (top), narrow at base (bottom)
+        const tW    = Math.round(Math.min(W * 0.50, H * 0.52));  // rim width (widest)
+        const bW    = Math.round(tW * 0.68);                      // base width (narrowest)
+        const ch    = Math.round(H * 0.30);                       // wrapper height
+        const baseY = H - 12;
+        const rimY  = baseY - ch;
+        const bX    = Math.round((W - bW) / 2);
+        const tX    = Math.round((W - tW) / 2);
 
-        // Paper cup
+        // Muffin top: dome that rises above the wrapper rim
+        const muffR  = Math.round(tW / 2) + 3;                     // slightly wider than rim opening
+        const muffCX = W / 2;
+        const rise   = Math.round(H * 0.13) + (layers - 1) * 4;   // how tall the dome is
+        const muffTopY = rimY - rise;
+
+        // 1. Paper wrapper (drawn first — cake body is hidden inside it)
         ctx.fillStyle = C.paper;
         ctx.beginPath();
-        ctx.moveTo(cx + Math.round(cw * 0.08), cy);
-        ctx.lineTo(cx + Math.round(cw * 0.92), cy);
-        ctx.lineTo(cx + cw, cy + ch);
-        ctx.lineTo(cx, cy + ch);
+        ctx.moveTo(tX, rimY);
+        ctx.lineTo(tX + tW, rimY);
+        ctx.lineTo(bX + bW, baseY);
+        ctx.lineTo(bX, baseY);
         ctx.closePath();
         ctx.fill();
 
+        // Pleat lines (lerp from rim edges to base edges)
         ctx.strokeStyle = C.paperLine;
         ctx.lineWidth   = 0.8;
-        for (let l = 1; l <= 3; l++) {
-            const fy   = cy + ch * l / 4;
-            const shrk = Math.round(cw * 0.08 * (l / 4));
+        for (let l = 1; l <= 2; l++) {
+            const t  = l / 3;
+            const fy = rimY + ch * t;
+            const lx = tX + (bX - tX) * t;
+            const rx = (tX + tW) + ((bX + bW) - (tX + tW)) * t;
             ctx.beginPath();
-            ctx.moveTo(cx + shrk, fy);
-            ctx.lineTo(cx + cw - shrk, fy);
+            ctx.moveTo(lx, fy);
+            ctx.lineTo(rx, fy);
             ctx.stroke();
         }
+
+        // Wrapper outline
         ctx.strokeStyle = '#B0A080';
         ctx.lineWidth   = 1.5;
         ctx.beginPath();
-        ctx.moveTo(cx + Math.round(cw * 0.08), cy);
-        ctx.lineTo(cx + Math.round(cw * 0.92), cy);
-        ctx.lineTo(cx + cw, cy + ch);
-        ctx.lineTo(cx, cy + ch);
+        ctx.moveTo(tX, rimY);
+        ctx.lineTo(tX + tW, rimY);
+        ctx.lineTo(bX + bW, baseY);
+        ctx.lineTo(bX, baseY);
         ctx.closePath();
         ctx.stroke();
 
-        // Body
+        // 2. Muffin top dome above the rim
         ctx.fillStyle = C.sponge;
-        ctx.fillRect(bx, by, bw, bh);
+        ctx.beginPath();
+        ctx.moveTo(muffCX - muffR, rimY);
+        ctx.lineTo(muffCX - muffR, muffTopY + rise * 0.35);
+        ctx.bezierCurveTo(
+            muffCX - muffR, muffTopY,
+            muffCX + muffR, muffTopY,
+            muffCX + muffR, muffTopY + rise * 0.35
+        );
+        ctx.lineTo(muffCX + muffR, rimY);
+        ctx.closePath();
+        ctx.fill();
+
+        // Muffin top bottom edge
         ctx.fillStyle = C.spongeBot;
-        ctx.fillRect(bx, by + bh - 3, bw, 3);
+        ctx.fillRect(muffCX - muffR, rimY - 3, muffR * 2, 3);
+
+        // Muffin top outline
         ctx.strokeStyle = C.spongeBot;
         ctx.lineWidth   = 1;
-        ctx.strokeRect(bx + 0.5, by + 0.5, bw - 1, bh - 1);
+        ctx.beginPath();
+        ctx.moveTo(muffCX - muffR, rimY);
+        ctx.lineTo(muffCX - muffR, muffTopY + rise * 0.35);
+        ctx.bezierCurveTo(
+            muffCX - muffR, muffTopY,
+            muffCX + muffR, muffTopY,
+            muffCX + muffR, muffTopY + rise * 0.35
+        );
+        ctx.lineTo(muffCX + muffR, rimY);
+        ctx.stroke();
 
-        // Frosting dome
+        // 3. Frosting dome on top of muffin top
         if (decor) {
             const fr = this._fr(frosting);
             if (fr) {
-                const r   = bw / 2;
-                const dcx = W / 2;
-                const dcy = by;
-                const dh  = 26 + Math.min(10, layers * 2);
+                const dh    = Math.round(H * 0.22) + Math.min(10, layers * 2);
+                const baseY = muffTopY + Math.round(rise * 0.18); // overlap muffin top slightly
                 ctx.fillStyle = fr.main;
                 ctx.beginPath();
-                ctx.moveTo(dcx - r, dcy);
-                ctx.bezierCurveTo(dcx - r, dcy - dh * 1.25, dcx + r, dcy - dh * 1.25, dcx + r, dcy);
+                ctx.moveTo(muffCX - muffR, baseY);
+                ctx.bezierCurveTo(
+                    muffCX - muffR, baseY - dh * 1.2,
+                    muffCX + muffR, baseY - dh * 1.2,
+                    muffCX + muffR, baseY
+                );
                 ctx.closePath();
                 ctx.fill();
                 ctx.strokeStyle = fr.edge;
                 ctx.lineWidth   = 1;
                 ctx.stroke();
-                this._toppings(ctx, toppings, dcx - r * 0.75, dcy - dh * 0.88, r * 1.5, dh * 0.5);
+                this._toppings(ctx, toppings, muffCX - muffR * 0.8, baseY - dh * 0.85, muffR * 1.6, dh * 0.5);
             }
         }
     }

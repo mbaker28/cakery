@@ -48,19 +48,26 @@
                             </div>
                         </div>
 
-                        <div class="mb-3">
-                            <label class="form-label fw-semibold small">Layers</label>
-                            <div class="d-flex gap-2">
-                                {% for i in 1..5 %}
-                                    <form method="post" action="{{ path('cake_set_layers', {id: order.id, cakeId: cake.id}) }}">
-                                        <input type="hidden" name="layers" value="{{ i }}">
-                                        <button class="btn btn-sm {{ cake.layers == i ? 'btn-primary' : 'btn-outline-secondary' }}">
-                                            {{ i }}
-                                        </button>
-                                    </form>
-                                {% endfor %}
+                        {% if cake.size and cake.size.value == 'cupcake' %}
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold small">Layers</label>
+                                <p class="text-muted small mb-0">Cupcakes are always 1 layer.</p>
                             </div>
-                        </div>
+                        {% else %}
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold small">Layers</label>
+                                <div class="d-flex gap-2">
+                                    {% for i in 1..5 %}
+                                        <form method="post" action="{{ path('cake_set_layers', {id: order.id, cakeId: cake.id}) }}">
+                                            <input type="hidden" name="layers" value="{{ i }}">
+                                            <button class="btn btn-sm {{ cake.layers == i ? 'btn-primary' : 'btn-outline-secondary' }}">
+                                                {{ i }}
+                                            </button>
+                                        </form>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        {% endif %}
 
                         {{ include('cake/_ingredient_status.html.twig') }}
 
