@@ -22,7 +22,7 @@
     {% if cake.buildPhase.value == 'mixing' %}
         <form method="post" action="{{ path('cake_start_baking', {id: order.id, cakeId: cake.id}) }}" data-turbo-frame="_top">
             <button class="btn btn-warning w-100"
-                    {{ not cake.size or not cake.layers or not canBake ? 'disabled' : '' }}>
+                    {{ not cake.flavor or not cake.size or not cake.layers or not canBake ? 'disabled' : '' }}>
                 🔥 Put in Oven
             </button>
         </form>

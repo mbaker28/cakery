@@ -12,7 +12,8 @@
                         data-cake-preview-layers-value="{{ cake.layers ?? 0 }}"
                         data-cake-preview-frosting-value="{{ cake.frostingFlavor ? cake.frostingFlavor.value : '' }}"
                         data-cake-preview-toppings-value="{{ (cake.toppings ?? [])|map(t => t.value)|json_encode }}"
-                        data-cake-preview-phase-value="{{ cake.buildPhase.value }}">
+                        data-cake-preview-phase-value="{{ cake.buildPhase.value }}"
+                        data-cake-preview-flavor-value="{{ cake.flavor ? cake.flavor.value : '' }}">
                     </canvas>
                     <div class="text-center mt-2 text-muted" style="font-size:0.7rem;line-height:1.4">
                         {% if cake.size %}
@@ -33,6 +34,20 @@
                     {% if cake.buildPhase.value == 'mixing' %}
 
                         <h6 class="fw-semibold mb-3">🥣 Step 1: Mix</h6>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold small">Flavor</label>
+                            <div class="d-flex gap-2 flex-wrap">
+                                {% for cakeFlavor in cakeFlavors %}
+                                    <form method="post" action="{{ path('cake_set_flavor', {id: order.id, cakeId: cake.id}) }}">
+                                        <input type="hidden" name="flavor" value="{{ cakeFlavor.value }}">
+                                        <button class="btn btn-sm {{ cake.flavor == cakeFlavor ? 'btn-primary' : 'btn-outline-secondary' }}">
+                                            {{ cakeFlavor.label }}
+                                        </button>
+                                    </form>
+                                {% endfor %}
+                            </div>
+                        </div>
 
                         <div class="mb-3">
                             <label class="form-label fw-semibold small">Size</label>

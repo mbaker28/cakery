@@ -2,6 +2,7 @@
 
 namespace App\Entity;
 
+use App\Enum\CakeFlavor;
 use App\Enum\CakeSize;
 use App\Enum\FrostingFlavor;
 use App\Enum\OrderStatus;
@@ -41,6 +42,9 @@ class CakeOrder
 
     #[ORM\Column(length: 255)]
     private ?string $avatar = null;
+
+    #[ORM\Column(enumType: CakeFlavor::class)]
+    private ?CakeFlavor $requiredFlavor = null;
 
     #[ORM\Column(enumType: CakeSize::class)]
     private ?CakeSize $requiredSize = null;
@@ -160,6 +164,18 @@ class CakeOrder
     public function setAvatar(string $avatar): static
     {
         $this->avatar = $avatar;
+
+        return $this;
+    }
+
+    public function getRequiredFlavor(): ?CakeFlavor
+    {
+        return $this->requiredFlavor;
+    }
+
+    public function setRequiredFlavor(CakeFlavor $requiredFlavor): static
+    {
+        $this->requiredFlavor = $requiredFlavor;
 
         return $this;
     }

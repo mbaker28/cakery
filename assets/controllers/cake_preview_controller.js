@@ -1,5 +1,11 @@
 import { Controller } from '@hotwired/stimulus';
 
+const SPONGE = {
+    vanilla:    { main: '#F2C570', bot: '#C8852A' },
+    chocolate:  { main: '#4A2010', bot: '#2A1008' },
+    red_velvet: { main: '#8B1A1A', bot: '#5C0D0D' },
+};
+
 const C = {
     sponge:    '#F2C570',
     spongeBot: '#C8852A',
@@ -19,6 +25,7 @@ export default class extends Controller {
     static values = {
         size:     { type: String, default: '' },
         layers:   { type: Number, default: 0 },
+        flavor:   { type: String, default: '' },
         frosting: { type: String, default: '' },
         toppings: { type: Array,  default: [] },
         phase:    { type: String, default: 'mixing' },
@@ -33,6 +40,7 @@ export default class extends Controller {
 
     sizeValueChanged()     { if (this._ready) this.draw(); }
     layersValueChanged()   { if (this._ready) this.draw(); }
+    flavorValueChanged()   { if (this._ready) this.draw(); }
     frostingValueChanged() { if (this._ready) this.draw(); }
     toppingsValueChanged() { if (this._ready) this.draw(); }
     phaseValueChanged()    { if (this._ready) this.draw(); }
@@ -69,6 +77,10 @@ export default class extends Controller {
         const toppings = this.toppingsValue || [];
         const phase    = this.phaseValue;
         const decor    = phase === 'decorating';
+
+        const sp = SPONGE[this.flavorValue] || SPONGE.vanilla;
+        this._sm = sp.main;
+        this._sb = sp.bot;
 
         if (!size) {
             this._placeholder(ctx, W, H);
@@ -123,12 +135,12 @@ export default class extends Controller {
 
         for (let i = 0; i < layers; i++) {
             const ly = st + i * lh;
-            ctx.fillStyle = C.sponge;
+            ctx.fillStyle = this._sm;
             ctx.fillRect(cx, ly, cw, lh - 1);
-            ctx.fillStyle = C.spongeBot;
+            ctx.fillStyle = this._sb;
             ctx.fillRect(cx, ly + lh - 4, cw, 4);
         }
-        ctx.strokeStyle = C.spongeBot;
+        ctx.strokeStyle = this._sb;
         ctx.lineWidth   = 1.5;
         ctx.strokeRect(cx + 0.5, st + 0.5, cw - 1, sh - 1);
 
@@ -198,7 +210,7 @@ export default class extends Controller {
         ctx.stroke();
 
         // 2. Muffin top dome above the rim
-        ctx.fillStyle = C.sponge;
+        ctx.fillStyle = this._sm;
         ctx.beginPath();
         ctx.moveTo(muffCX - muffR, rimY);
         ctx.lineTo(muffCX - muffR, muffTopY + rise * 0.35);
@@ -212,11 +224,11 @@ export default class extends Controller {
         ctx.fill();
 
         // Muffin top bottom edge
-        ctx.fillStyle = C.spongeBot;
+        ctx.fillStyle = this._sb;
         ctx.fillRect(muffCX - muffR, rimY - 3, muffR * 2, 3);
 
         // Muffin top outline
-        ctx.strokeStyle = C.spongeBot;
+        ctx.strokeStyle = this._sb;
         ctx.lineWidth   = 1;
         ctx.beginPath();
         ctx.moveTo(muffCX - muffR, rimY);
@@ -268,11 +280,11 @@ export default class extends Controller {
         const tY = bY - tH - fh * 2 - 2;
 
         // Bottom tier
-        ctx.fillStyle = C.sponge;
+        ctx.fillStyle = this._sm;
         ctx.fillRect(bX, bY, bW, bH);
-        ctx.fillStyle = C.spongeBot;
+        ctx.fillStyle = this._sb;
         ctx.fillRect(bX, bY + bH - 4, bW, 4);
-        ctx.strokeStyle = C.spongeBot;
+        ctx.strokeStyle = this._sb;
         ctx.lineWidth   = 1.5;
         ctx.strokeRect(bX + 0.5, bY + 0.5, bW - 1, bH - 1);
         if (fr) {
@@ -284,11 +296,11 @@ export default class extends Controller {
         }
 
         // Top tier
-        ctx.fillStyle = C.sponge;
+        ctx.fillStyle = this._sm;
         ctx.fillRect(tX, tY, tW, tH);
-        ctx.fillStyle = C.spongeBot;
+        ctx.fillStyle = this._sb;
         ctx.fillRect(tX, tY + tH - 3, tW, 3);
-        ctx.strokeStyle = C.spongeBot;
+        ctx.strokeStyle = this._sb;
         ctx.lineWidth   = 1.5;
         ctx.strokeRect(tX + 0.5, tY + 0.5, tW - 1, tH - 1);
         if (fr) {

@@ -45,6 +45,7 @@
                     {% endif %}
                     <ul class="list-unstyled small mt-2">
                         <li>🎂 {{ order.requiredSize.value }}</li>
+                        <li>🍰 {{ order.requiredFlavor.label }}</li>
                         <li>🍦 {{ order.requiredFrostingFlavor.label }}</li>
                         <li>📏 {{ order.requiredLayers }} layer{{ order.requiredLayers > 1 ? 's' : '' }}</li>
                         {% if order.requiredToppings %}

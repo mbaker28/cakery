@@ -58,6 +58,10 @@ class OrderService
             $quality -= 50.0;
         }
 
+        if ($cake->getFlavor() !== $order->getRequiredFlavor()) {
+            $quality -= 25.0;
+        }
+
         if ($cake->getFrostingFlavor() !== $order->getRequiredFrostingFlavor()) {
             $quality -= 25.0;
         }

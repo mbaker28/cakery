@@ -3,6 +3,7 @@
 namespace App\Service;
 
 use App\Entity\CakeOrder;
+use App\Enum\CakeFlavor;
 use App\Enum\CakeSize;
 use App\Enum\FrostingFlavor;
 use App\Enum\OrderStatus;
@@ -55,6 +56,7 @@ class OrderGeneratorService
         $tier     = $this->tier($reputation);
         $size     = $this->pick(self::SIZES_BY_TIER[$tier]);
         $layers   = $size === CakeSize::CUPCAKE ? 1 : random_int(...self::LAYERS_BY_TIER[$tier]);
+        $flavor   = $this->pick(CakeFlavor::cases());
         $frosting = $this->pick(FrostingFlavor::cases());
         $toppings = $this->randomToppings($tier);
 
@@ -69,6 +71,7 @@ class OrderGeneratorService
             ->setStatus(OrderStatus::PENDING)
             ->setCustomerName($this->pick(self::CUSTOMER_NAMES))
             ->setAvatar(strtolower($this->pick(self::CUSTOMER_NAMES)))
+            ->setRequiredFlavor($flavor)
             ->setRequiredSize($size)
             ->setRequiredFrostingFlavor($frosting)
             ->setRequiredLayers($layers)

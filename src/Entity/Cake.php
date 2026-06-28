@@ -3,6 +3,7 @@
 namespace App\Entity;
 
 use App\Enum\CakeBuildPhase;
+use App\Enum\CakeFlavor;
 use App\Enum\CakeSize;
 use App\Enum\FrostingFlavor;
 use App\Enum\Topping;
@@ -17,6 +18,9 @@ class Cake
     #[ORM\GeneratedValue]
     #[ORM\Column]
     private ?int $id = null;
+
+    #[ORM\Column(enumType: CakeFlavor::class, nullable: true)]
+    private ?CakeFlavor $flavor = null;
 
     #[ORM\Column(enumType: CakeSize::class, nullable: true)]
     private ?CakeSize $size = null;
@@ -54,6 +58,18 @@ class Cake
     public function setId(int $id): static
     {
         $this->id = $id;
+
+        return $this;
+    }
+
+    public function getFlavor(): ?CakeFlavor
+    {
+        return $this->flavor;
+    }
+
+    public function setFlavor(?CakeFlavor $flavor): static
+    {
+        $this->flavor = $flavor;
 
         return $this;
     }

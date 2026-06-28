@@ -6,6 +6,7 @@ use App\Config;
 use App\Entity\Cake;
 use App\Entity\CakeOrder;
 use App\Enum\CakeBuildPhase;
+use App\Enum\CakeFlavor;
 use App\Enum\CakeSize;
 use App\Enum\FrostingFlavor;
 use App\Enum\Ingredient;
@@ -57,6 +58,25 @@ class CakeController extends AbstractController
     public function edit(CakeOrder $order, int $cakeId): Response
     {
         return $this->renderBuilder($order, $this->getCakeOr404($order, $cakeId), fullPage: true);
+    }
+
+    #[Route('/{cakeId}/flavor', name: 'cake_set_flavor', requirements: ['cakeId' => '\d+'], methods: ['POST'])]
+    public function setFlavor(CakeOrder $order, int $cakeId, Request $request): Response
+    {
+        $cake = $this->getCakeOr404($order, $cakeId);
+
+        if ($cake->getBuildPhase() !== CakeBuildPhase::MIXING) {
+            return $this->renderBuilder($order, $cake);
+        }
+
+        $flavor = CakeFlavor::tryFrom($request->request->getString('flavor'));
+
+        if ($flavor !== null) {
+            $cake->setFlavor($flavor);
+            $this->em->flush();
+        }
+
+        return $this->renderBuilder($order, $cake);
     }
 
     #[Route('/{cakeId}/size', name: 'cake_set_size', requirements: ['cakeId' => '\d+'], methods: ['POST'])]
@@ -150,6 +170,7 @@ class CakeController extends AbstractController
         $cake = $this->getCakeOr404($order, $cakeId);
 
         if ($cake->getBuildPhase() !== CakeBuildPhase::MIXING
+            || $cake->getFlavor() === null
             || $cake->getSize() === null
             || $cake->getLayers() === null
         ) {
@@ -234,6 +255,7 @@ class CakeController extends AbstractController
             'order'          => $order,
             'cake'           => $cake,
             'bakery'         => $bakery,
+            'cakeFlavors'    => CakeFlavor::cases(),
             'sizes'          => CakeSize::cases(),
             'flavors'        => FrostingFlavor::cases(),
             'toppings'       => Topping::cases(),
