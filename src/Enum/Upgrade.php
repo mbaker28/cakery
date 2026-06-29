@@ -4,34 +4,38 @@ namespace App\Enum;
 
 enum Upgrade: string
 {
-    case FASTER_OVEN = 'faster_oven';
-    case DOORBELL    = 'doorbell';
-    case OVEN_ALARM  = 'oven_alarm';
+    case FASTER_OVEN  = 'faster_oven';
+    case DOORBELL     = 'doorbell';
+    case OVEN_ALARM   = 'oven_alarm';
+    case DISPLAY_CASE = 'display_case';
 
     public function label(): string
     {
         return match($this) {
-            self::FASTER_OVEN => 'Faster Oven',
-            self::DOORBELL    => 'Doorbell',
-            self::OVEN_ALARM  => 'Oven Alarm',
+            self::FASTER_OVEN  => 'Faster Oven',
+            self::DOORBELL     => 'Doorbell',
+            self::OVEN_ALARM   => 'Oven Alarm',
+            self::DISPLAY_CASE => 'Display Case',
         };
     }
 
     public function description(): string
     {
         return match($this) {
-            self::FASTER_OVEN => 'Upgrade your oven to reduce baking time.',
-            self::DOORBELL    => 'Get notified when a new order arrives.',
-            self::OVEN_ALARM  => 'Get notified when a cake is done baking.',
+            self::FASTER_OVEN  => 'Upgrade your oven to reduce baking time.',
+            self::DOORBELL     => 'Get notified when a new order arrives.',
+            self::OVEN_ALARM   => 'Get notified when a cake is done baking.',
+            self::DISPLAY_CASE => 'Perfect cakes earn 25% more.',
         };
     }
 
     public function maxLevel(): int
     {
         return match($this) {
-            self::FASTER_OVEN => 3,
-            self::DOORBELL    => 1,
-            self::OVEN_ALARM  => 1,
+            self::FASTER_OVEN  => 3,
+            self::DOORBELL     => 1,
+            self::OVEN_ALARM   => 1,
+            self::DISPLAY_CASE => 1,
         };
     }
 
@@ -44,8 +48,9 @@ enum Upgrade: string
                 3       => 40.0,
                 default => 0.0,
             },
-            self::DOORBELL => 10.0,
-            self::OVEN_ALARM => 15.0,
+            self::DOORBELL     => 10.0,
+            self::OVEN_ALARM   => 15.0,
+            self::DISPLAY_CASE => 20.0,
         };
     }
 

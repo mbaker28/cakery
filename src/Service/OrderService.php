@@ -6,6 +6,7 @@ use App\Entity\Bakery;
 use App\Entity\Cake;
 use App\Entity\CakeOrder;
 use App\Enum\OrderStatus;
+use App\Enum\Upgrade;
 
 class OrderService
 {
@@ -28,6 +29,10 @@ class OrderService
         }
 
         $earned = $order->getPayout() * ($quality / 100.0) * $this->timeMultiplier($order);
+
+        if ($quality === 100.0 && $bakery->hasUpgrade(Upgrade::DISPLAY_CASE)) {
+            $earned *= 1.25;
+        }
 
         $bakery->setMoney($bakery->getMoney() + $earned);
         $bakery->setReputation(min(100, $bakery->getReputation() + ($order->getHappinessBonus() ?? 5)));
