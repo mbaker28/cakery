@@ -66,10 +66,10 @@
                                     </div>
                                 </div>
                                 <ul class="list-unstyled small mb-3">
-                                    <li>🎂 {{ order.requiredSize.value }}</li>
                                     <li>🍰 {{ order.requiredFlavor.label }}</li>
-                                    <li>🍦 {{ order.requiredFrostingFlavor.label }}</li>
+                                    <li>🎂 {{ order.requiredSize.value }}</li>
                                     <li>📏 {{ order.requiredLayers }} layer{{ order.requiredLayers > 1 ? 's' : '' }}</li>
+                                    <li>🍦 {{ order.requiredFrostingFlavor.label }}</li>
                                     {% if order.requiredToppings %}
                                         <li>✨ {{ order.requiredToppings|map(t => t.label)|join(', ') }}</li>
                                     {% endif %}
