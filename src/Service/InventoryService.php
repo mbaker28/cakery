@@ -4,6 +4,7 @@ namespace App\Service;
 
 use App\Entity\Bakery;
 use App\Entity\Cake;
+use App\Enum\Ingredient;
 use App\Enum\Restockable;
 
 class InventoryService
@@ -70,6 +71,40 @@ class InventoryService
         }
 
         $bakery->setInventory($inventory);
+    }
+
+    /**
+     * Applies overnight spoilage to perishable ingredients.
+     * Returns only ingredients that actually lost stock (amount > 0).
+     *
+     * @return array<string, float>
+     */
+    public function applySpoilage(Bakery $bakery): array
+    {
+        $inventory = $bakery->getInventory();
+        $lost      = [];
+
+        foreach (Ingredient::cases() as $ingredient) {
+            $rate = $ingredient->spoilagePerDay();
+
+            if ($rate <= 0.0) {
+                continue;
+            }
+
+            $key      = $ingredient->inventoryKey();
+            $current  = $inventory[$key] ?? 0.0;
+            $spoiled  = min($current, $rate);
+
+            if ($spoiled > 0.0) {
+                $inventory[$key] = round($current - $spoiled, 4);
+                $lost[$key]      = $spoiled;
+            }
+        }
+
+        $bakery->setInventory($inventory);
+        $bakery->setLastSpoilage($lost);
+
+        return $lost;
     }
 
     public function restock(Restockable $item, int $quantity, Bakery $bakery): void

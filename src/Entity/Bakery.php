@@ -64,6 +64,12 @@ class Bakery
     private ?int $dayStartPerfectOrders = null;
 
     /**
+     * @var array<string, float>
+     */
+    #[ORM\Column(type: 'json')]
+    private array $lastSpoilage = [];
+
+    /**
      * @var array<string, int> $upgrades
      */
     #[ORM\Column(type: 'json')]
@@ -257,6 +263,18 @@ class Bakery
     public function setDayTotalOrders(?int $dayTotalOrders): static
     {
         $this->dayTotalOrders = $dayTotalOrders;
+
+        return $this;
+    }
+
+    public function getLastSpoilage(): array
+    {
+        return $this->lastSpoilage;
+    }
+
+    public function setLastSpoilage(array $lastSpoilage): static
+    {
+        $this->lastSpoilage = $lastSpoilage;
 
         return $this;
     }

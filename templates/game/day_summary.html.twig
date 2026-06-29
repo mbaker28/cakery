@@ -125,6 +125,19 @@
         </p>
     {% endif %}
 
+    {% if bakery.lastSpoilage is not empty %}
+        <div class="card mb-3 border-0" style="background:#fdf6ec">
+            <div class="card-body py-2 px-3">
+                <div class="small fw-semibold mb-1" style="color:#a05a00">🗑️ Overnight spoilage</div>
+                <ul class="list-unstyled small mb-0" style="color:#7a4500">
+                    {% for key, amount in bakery.lastSpoilage %}
+                        <li>{{ amount % 1 == 0 ? amount|number_format(0) : amount }} {{ key|replace({'_': ' '}) }} lost</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    {% endif %}
+
     <div class="standing-strip">
         <div class="standing-item">
             <div class="standing-value">💰 ${{ bakery.money|number_format(2) }}</div>

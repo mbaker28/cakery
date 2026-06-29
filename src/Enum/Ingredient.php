@@ -48,6 +48,17 @@ enum Ingredient: string implements Restockable
         };
     }
 
+    public function spoilagePerDay(): float
+    {
+        return match($this) {
+            self::EGGS   => 2.0,
+            self::MILK   => 0.5,
+            self::BUTTER => 0.5,
+            self::FLOUR  => 0.0,
+            self::SUGAR  => 0.0,
+        };
+    }
+
     public function group(): string
     {
         return 'Base Ingredients';

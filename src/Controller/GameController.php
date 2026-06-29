@@ -11,6 +11,7 @@ use App\Enum\OrderStatus;
 use App\Enum\Upgrade;
 use App\Repository\BakeryRepository;
 use App\Repository\CakeOrderRepository;
+use App\Service\InventoryService;
 use App\Service\OrderGeneratorService;
 use App\Service\OrderService;
 use Doctrine\ORM\EntityManagerInterface;
@@ -24,6 +25,7 @@ class GameController extends AbstractController
     public function __construct(
         private readonly BakeryRepository $bakeryRepository,
         private readonly CakeOrderRepository $cakeOrderRepository,
+        private readonly InventoryService $inventoryService,
         private readonly OrderGeneratorService $orderGeneratorService,
         private readonly OrderService $orderService,
         private readonly EntityManagerInterface $em,
@@ -118,6 +120,7 @@ class GameController extends AbstractController
             return $this->redirectToRoute('game_results');
         }
 
+        $this->inventoryService->applySpoilage($bakery);
         $bakery->setPhase(GamePhase::SHOP);
         $this->em->flush();
 
@@ -147,6 +150,7 @@ class GameController extends AbstractController
             return $this->redirectToRoute('game_results');
         }
 
+        $this->inventoryService->applySpoilage($bakery);
         $bakery->setPhase(GamePhase::SHOP);
         $this->em->flush();
 
