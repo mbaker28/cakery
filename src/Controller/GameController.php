@@ -6,6 +6,7 @@ use App\Config;
 use App\Entity\Bakery;
 use App\Entity\CakeOrder;
 use App\Enum\GamePhase;
+use App\Enum\Ingredient;
 use App\Enum\OrderStatus;
 use App\Enum\Upgrade;
 use App\Repository\BakeryRepository;
@@ -41,12 +42,17 @@ class GameController extends AbstractController
             return $this->redirectToRoute('game_shop');
         }
 
-        $now    = new \DateTimeImmutable();
-        $orders = $this->cakeOrderRepository->findActiveOrders();
+        $now     = new \DateTimeImmutable();
+        $orders  = $this->cakeOrderRepository->findActiveOrders();
+        $unitMap = array_column(array_map(
+            fn($item) => [$item->inventoryKey(), $item->unit()],
+            Ingredient::cases()
+        ), 1, 0);
 
         return $this->render('game/index.html.twig', [
             'bakery'         => $bakery,
             'orders'         => $orders,
+            'unitMap'        => $unitMap,
             'serverNow'      => $now->getTimestamp(),
             'bakingDuration' => Config::bakingSecondsForLevel($bakery->getUpgradeLevel(Upgrade::FASTER_OVEN)),
         ]);
