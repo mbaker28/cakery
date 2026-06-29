@@ -259,8 +259,14 @@ class CakeController extends AbstractController
             'bakery'         => $bakery,
             'cakeFlavors'    => CakeFlavor::cases(),
             'sizes'          => CakeSize::cases(),
-            'flavors'        => FrostingFlavor::cases(),
-            'toppings'       => Topping::cases(),
+            'flavors'        => array_values(array_filter(
+                FrostingFlavor::cases(),
+                fn($f) => $f->requiredRecipeLevel() <= ($bakery?->getUpgradeLevel(Upgrade::RECIPE_BOOK) ?? 0)
+            )),
+            'toppings'       => array_values(array_filter(
+                Topping::cases(),
+                fn($t) => $t->requiredRecipeLevel() <= ($bakery?->getUpgradeLevel(Upgrade::RECIPE_BOOK) ?? 0)
+            )),
             'unitMap'        => $unitMap,
             'canBake'        => $bakery && $this->inventoryService->canBake($cake, $bakery),
             'serverNow'      => (new \DateTimeImmutable())->getTimestamp(),

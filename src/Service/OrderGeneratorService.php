@@ -59,14 +59,17 @@ class OrderGeneratorService
         3 => [15, 20],
     ];
 
-    public function generate(int $reputation): CakeOrder
+    public function generate(int $reputation, int $recipeBookLevel = 0): CakeOrder
     {
         $tier     = $this->tier($reputation);
         $size     = $this->pick(self::SIZES_BY_TIER[$tier]);
         $layers   = $size === CakeSize::CUPCAKE ? 1 : random_int(...self::LAYERS_BY_TIER[$tier]);
         $flavor   = $this->pick(CakeFlavor::cases());
-        $frosting = $this->pick(FrostingFlavor::cases());
-        $toppings = $this->randomToppings($tier);
+        $frosting = $this->pick(array_values(array_filter(
+            FrostingFlavor::cases(),
+            fn($f) => $f->requiredRecipeLevel() <= $recipeBookLevel
+        )));
+        $toppings = $this->randomToppings($tier, $recipeBookLevel);
 
         $payout = self::BASE_PAYOUT_BY_SIZE[$size->value]
             + ($layers * self::PAYOUT_PER_LAYER)
@@ -117,9 +120,12 @@ class OrderGeneratorService
         return $maxTier;
     }
 
-    private function randomToppings(int $tier): array
+    private function randomToppings(int $tier, int $recipeBookLevel = 0): array
     {
-        $all   = Topping::cases();
+        $all   = array_values(array_filter(
+            Topping::cases(),
+            fn($t) => $t->requiredRecipeLevel() <= $recipeBookLevel
+        ));
         $max   = self::MAX_TOPPINGS_BY_TIER[$tier];
         $count = random_int(0, min($max, count($all)));
 

@@ -13,6 +13,8 @@ const C = {
         frosting_chocolate:    { main: '#6B3A2A', edge: '#3D200E' },
         frosting_vanilla:      { main: '#FFF8E8', edge: '#D4C090' },
         frosting_cream_cheese: { main: '#FAEBD7', edge: '#C8A882' },
+        frosting_strawberry:   { main: '#F4A0A8', edge: '#C05060' },
+        frosting_lemon:        { main: '#FEFB72', edge: '#C8B000' },
     },
     sprinkles: ['#E53E3E', '#3182CE', '#38A169', '#D69E2E', '#8B5CF6'],
     chip:      '#1A0800',
@@ -364,6 +366,38 @@ export default class extends Controller {
                 ctx.arc(sx + 3, sy + 3, 5, -Math.PI, 0);
                 ctx.lineTo(sx, sy + 11);
                 ctx.closePath();
+                ctx.fill();
+            }
+        }
+
+        if (toppings.includes('topping_caramel_drizzle')) {
+            ctx.strokeStyle = '#8B5C2A';
+            ctx.lineWidth   = 2;
+            const step = Math.max(1, w - 16) / 3;
+            for (let i = 0; i < 3; i++) {
+                const sx = x + 8 + i * step;
+                ctx.beginPath();
+                ctx.moveTo(sx, ty - fh * 0.3);
+                ctx.bezierCurveTo(sx + 6, ty, sx - 4, ty + fh * 0.3, sx + step * 0.7, ty);
+                ctx.stroke();
+            }
+        }
+
+        if (toppings.includes('topping_fresh_flowers')) {
+            const petalColors = ['#FF6B8A', '#FF8C00', '#9370DB', '#FF69B4', '#E84393'];
+            for (let i = 0; i < 5; i++) {
+                const fx = x + 8 + (i * 43) % Math.max(1, w - 16);
+                const fy = ty - (i % 2) * 3;
+                for (let p = 0; p < 5; p++) {
+                    const angle = p * Math.PI * 2 / 5;
+                    ctx.fillStyle = petalColors[i % petalColors.length];
+                    ctx.beginPath();
+                    ctx.arc(fx + Math.cos(angle) * 3, fy + Math.sin(angle) * 3, 2, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+                ctx.fillStyle = '#FFD700';
+                ctx.beginPath();
+                ctx.arc(fx, fy, 1.5, 0, Math.PI * 2);
                 ctx.fill();
             }
         }

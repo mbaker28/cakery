@@ -266,7 +266,10 @@ class GameController extends AbstractController
             $spawnAt = $now->modify('+' . ($i * Config::SPAWN_INTERVAL) . ' seconds');
             $failsAt = $spawnAt->modify('+' . Config::SECONDS_PER_ORDER . ' seconds');
 
-            $order = $this->orderGeneratorService->generate($bakery->getReputation());
+            $order = $this->orderGeneratorService->generate(
+                $bakery->getReputation(),
+                $bakery->getUpgradeLevel(Upgrade::RECIPE_BOOK)
+            );
             $order->setSpawnAt($spawnAt);
             $order->setFailsAt($failsAt);
             $this->em->persist($order);

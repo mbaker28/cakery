@@ -8,6 +8,7 @@ enum Upgrade: string
     case DOORBELL     = 'doorbell';
     case OVEN_ALARM   = 'oven_alarm';
     case DISPLAY_CASE = 'display_case';
+    case RECIPE_BOOK  = 'recipe_book';
 
     public function label(): string
     {
@@ -16,6 +17,7 @@ enum Upgrade: string
             self::DOORBELL     => 'Doorbell',
             self::OVEN_ALARM   => 'Oven Alarm',
             self::DISPLAY_CASE => 'Display Case',
+            self::RECIPE_BOOK  => 'Recipe Book',
         };
     }
 
@@ -26,6 +28,7 @@ enum Upgrade: string
             self::DOORBELL     => 'Get notified when a new order arrives.',
             self::OVEN_ALARM   => 'Get notified when a cake is done baking.',
             self::DISPLAY_CASE => 'Perfect cakes earn 25% more.',
+            self::RECIPE_BOOK  => 'Unlock new frostings and toppings.',
         };
     }
 
@@ -36,6 +39,7 @@ enum Upgrade: string
             self::DOORBELL     => 1,
             self::OVEN_ALARM   => 1,
             self::DISPLAY_CASE => 1,
+            self::RECIPE_BOOK  => 2,
         };
     }
 
@@ -51,6 +55,11 @@ enum Upgrade: string
             self::DOORBELL     => 10.0,
             self::OVEN_ALARM   => 15.0,
             self::DISPLAY_CASE => 20.0,
+            self::RECIPE_BOOK  => match($nextLevel) {
+                1       => 15.0,
+                2       => 25.0,
+                default => 0.0,
+            },
         };
     }
 
@@ -61,6 +70,11 @@ enum Upgrade: string
                 1       => '10s bake time',
                 2       => '7s bake time',
                 3       => '5s bake time',
+                default => '',
+            },
+            self::RECIPE_BOOK => match($level) {
+                1       => 'Strawberry frosting + caramel drizzle',
+                2       => 'Lemon frosting + fresh flowers',
                 default => '',
             },
             default => '',
