@@ -7,6 +7,7 @@ use App\Enum\GamePhase;
 use App\Enum\Ingredient;
 use App\Enum\Restockable;
 use App\Enum\Topping;
+use App\Enum\Upgrade;
 use App\Repository\BakeryRepository;
 use Doctrine\ORM\Mapping as ORM;
 
@@ -57,6 +58,12 @@ class Bakery
 
     #[ORM\Column(nullable: true)]
     private ?int $dayTotalOrders = null;
+
+    /**
+     * @var array<string, int> $upgrades
+     */
+    #[ORM\Column(type: 'json')]
+    private array $upgrades = [];
 
     /**
      * @var array<string, int> $inventory
@@ -252,6 +259,23 @@ class Bakery
     public function setDayTotalOrders(?int $dayTotalOrders): static
     {
         $this->dayTotalOrders = $dayTotalOrders;
+
+        return $this;
+    }
+
+    public function getUpgradeLevel(Upgrade $upgrade): int
+    {
+        return $this->upgrades[$upgrade->value] ?? 0;
+    }
+
+    public function hasUpgrade(Upgrade $upgrade): bool
+    {
+        return $this->getUpgradeLevel($upgrade) > 0;
+    }
+
+    public function setUpgradeLevel(Upgrade $upgrade, int $level): static
+    {
+        $this->upgrades[$upgrade->value] = $level;
 
         return $this;
     }

@@ -11,9 +11,17 @@ use App\Enum\Topping;
 
 class OrderGeneratorService
 {
-    private const CUSTOMER_NAMES = [
-        'Alice', 'Bob', 'Clara', 'David', 'Eva',
-        'Frank', 'Grace', 'Henry', 'Iris', 'Jack',
+    private const CUSTOMERS = [
+        'Alice' => '👩‍🦰',
+        'Bob'   => '👨‍🦲',
+        'Clara' => '👩‍🦱',
+        'David' => '👨‍🦳',
+        'Eva'   => '👧',
+        'Frank' => '👴',
+        'Grace' => '👩‍🦳',
+        'Henry' => '👦',
+        'Iris'  => '👩',
+        'Jack'  => '👨',
     ];
 
     private const SIZES_BY_TIER = [
@@ -69,8 +77,8 @@ class OrderGeneratorService
 
         return (new CakeOrder())
             ->setStatus(OrderStatus::PENDING)
-            ->setCustomerName($this->pick(self::CUSTOMER_NAMES))
-            ->setAvatar(strtolower($this->pick(self::CUSTOMER_NAMES)))
+            ->setCustomerName($name = $this->pickKey(self::CUSTOMERS))
+            ->setAvatar(self::CUSTOMERS[$name])
             ->setRequiredFlavor($flavor)
             ->setRequiredSize($size)
             ->setRequiredFrostingFlavor($frosting)
@@ -126,5 +134,11 @@ class OrderGeneratorService
     private function pick(array $items): mixed
     {
         return $items[array_rand($items)];
+    }
+
+    private function pickKey(array $map): string
+    {
+        $keys = array_keys($map);
+        return $keys[array_rand($keys)];
     }
 }

@@ -40,6 +40,42 @@
         </form>
     </div>
 
+    <h6 class="text-muted text-uppercase small fw-semibold mt-4 mb-2">Upgrades</h6>
+    <div class="row g-3 mb-4">
+        {% for upgrade in upgrades %}
+            {% set currentLevel = bakery.getUpgradeLevel(upgrade) %}
+            {% set maxed = currentLevel >= upgrade.maxLevel %}
+            {% set nextLevel = currentLevel + 1 %}
+            {% set cost = maxed ? 0 : upgrade.costForLevel(nextLevel) %}
+            <div class="col-md-4">
+                <div class="card h-100">
+                    <div class="card-body d-flex justify-content-between align-items-start gap-3">
+                        <div>
+                            <div class="fw-semibold">{{ upgrade.label }}</div>
+                            <div class="text-muted small">{{ upgrade.description }}</div>
+                            {% if upgrade.maxLevel > 1 %}
+                                <div class="small mt-1 text-secondary">
+                                    Level {{ currentLevel }}/{{ upgrade.maxLevel }}
+                                    {% if not maxed %} → {{ upgrade.effectForLevel(nextLevel) }}{% endif %}
+                                </div>
+                            {% endif %}
+                        </div>
+                        {% if maxed %}
+                            <span class="badge bg-success flex-shrink-0">Owned</span>
+                        {% else %}
+                            <form method="post" action="{{ path('game_purchase_upgrade') }}" class="flex-shrink-0">
+                                <input type="hidden" name="upgrade" value="{{ upgrade.value }}">
+                                <button class="btn btn-sm btn-outline-primary {{ bakery.money < cost ? 'disabled' : '' }}">
+                                    ${{ cost|number_format(2) }}
+                                </button>
+                            </form>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+
     {% set groups = ['Base Ingredients', 'Frostings', 'Toppings'] %}
     {% for group in groups %}
         <h6 class="text-muted text-uppercase small fw-semibold mt-4 mb-2">{{ group }}</h6>

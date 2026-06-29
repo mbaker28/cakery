@@ -16,6 +16,16 @@ class Config
     public const MIN_ORDERS_PER_DAY = 2;
     public const MAX_ORDERS_PER_DAY = 6;
 
+    public static function bakingSecondsForLevel(int $upgradeLevel): int
+    {
+        return match($upgradeLevel) {
+            1       => 10,
+            2       => 7,
+            3       => 5,
+            default => self::BAKING_SECONDS,
+        };
+    }
+
     /** How many orders spawn today, scaling with reputation (2 → 6). */
     public static function ordersForDay(int $reputation): int
     {

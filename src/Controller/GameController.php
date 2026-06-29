@@ -7,6 +7,7 @@ use App\Entity\Bakery;
 use App\Entity\CakeOrder;
 use App\Enum\GamePhase;
 use App\Enum\OrderStatus;
+use App\Enum\Upgrade;
 use App\Repository\BakeryRepository;
 use App\Repository\CakeOrderRepository;
 use App\Service\OrderGeneratorService;
@@ -47,7 +48,7 @@ class GameController extends AbstractController
             'bakery'         => $bakery,
             'orders'         => $orders,
             'serverNow'      => $now->getTimestamp(),
-            'bakingDuration' => Config::BAKING_SECONDS,
+            'bakingDuration' => Config::bakingSecondsForLevel($bakery->getUpgradeLevel(Upgrade::FASTER_OVEN)),
         ]);
     }
 

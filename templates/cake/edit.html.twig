@@ -85,4 +85,11 @@
 
     </div>
 
+    {% if bakery.hasUpgrade(constant('App\\Enum\\Upgrade::DOORBELL')) or bakery.hasUpgrade(constant('App\\Enum\\Upgrade::OVEN_ALARM')) %}
+        <div data-controller="notification"
+             data-notification-doorbell-value="{{ bakery.hasUpgrade(constant('App\\Enum\\Upgrade::DOORBELL')) ? 'true' : 'false' }}"
+             data-notification-oven-alarm-value="{{ bakery.hasUpgrade(constant('App\\Enum\\Upgrade::OVEN_ALARM')) ? 'true' : 'false' }}">
+        </div>
+    {% endif %}
+
 {% endblock %}

@@ -7,6 +7,7 @@ use App\Enum\FrostingFlavor;
 use App\Enum\GamePhase;
 use App\Enum\Ingredient;
 use App\Enum\Topping;
+use App\Enum\Upgrade;
 use App\Repository\BakeryRepository;
 use App\Service\InventoryService;
 use Doctrine\ORM\EntityManagerInterface;
@@ -40,8 +41,47 @@ class ShopController extends AbstractController
         return $this->render('game/shop.html.twig', [
             'bakery'        => $bakery,
             'restockables'  => [...Ingredient::cases(), ...FrostingFlavor::cases(), ...Topping::cases()],
+            'upgrades'      => Upgrade::cases(),
             'nextDayOrders' => Config::ordersForDay($bakery->getReputation()),
         ]);
+    }
+
+    #[Route('/shop/upgrade', name: 'game_purchase_upgrade', methods: ['POST'])]
+    public function purchaseUpgrade(Request $request): Response
+    {
+        $bakery = $this->bakeryRepository->findOneBy([]);
+
+        if ($bakery === null || $bakery->getPhase() !== GamePhase::SHOP) {
+            return $this->redirectToRoute('game_index');
+        }
+
+        $upgrade = Upgrade::tryFrom($request->request->getString('upgrade'));
+
+        if ($upgrade === null) {
+            return $this->redirectToRoute('game_shop');
+        }
+
+        $currentLevel = $bakery->getUpgradeLevel($upgrade);
+        $nextLevel    = $currentLevel + 1;
+
+        if ($nextLevel > $upgrade->maxLevel()) {
+            return $this->redirectToRoute('game_shop');
+        }
+
+        $cost = $upgrade->costForLevel($nextLevel);
+
+        if ($bakery->getMoney() < $cost) {
+            $this->addFlash('danger', 'Not enough money.');
+            return $this->redirectToRoute('game_shop');
+        }
+
+        $bakery->setMoney($bakery->getMoney() - $cost);
+        $bakery->setUpgradeLevel($upgrade, $nextLevel);
+        $this->em->flush();
+
+        $this->addFlash('success', sprintf('%s upgraded!', $upgrade->label()));
+
+        return $this->redirectToRoute('game_shop');
     }
 
     #[Route('/shop/restock', name: 'game_restock', methods: ['POST'])]

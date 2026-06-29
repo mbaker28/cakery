@@ -42,6 +42,21 @@ class CakeOrderRepository extends ServiceEntityRepository
             ->getResult();
     }
 
+    /** Orders that spawned within a time window (for doorbell notifications). */
+    /** @return CakeOrder[] */
+    public function findOrdersSpawnedBetween(\DateTimeImmutable $from, \DateTimeImmutable $to): array
+    {
+        return $this->createQueryBuilder('o')
+            ->andWhere('o.spawnAt > :from')
+            ->andWhere('o.spawnAt <= :to')
+            ->andWhere('o.status != :failed')
+            ->setParameter('from', $from)
+            ->setParameter('to', $to)
+            ->setParameter('failed', OrderStatus::FAILED)
+            ->getQuery()
+            ->getResult();
+    }
+
     /** Orders not yet revealed to the player. */
     /** @return CakeOrder[] */
     public function findUnspawned(\DateTimeImmutable $now): array

@@ -12,6 +12,7 @@ use App\Enum\FrostingFlavor;
 use App\Enum\Ingredient;
 use App\Enum\OrderStatus;
 use App\Enum\Topping;
+use App\Enum\Upgrade;
 use App\Repository\BakeryRepository;
 use App\Service\BakingService;
 use App\Service\InventoryService;
@@ -193,10 +194,12 @@ class CakeController extends AbstractController
             return $this->redirectToRoute('cake_edit', ['id' => $order->getId(), 'cakeId' => $cake->getId()]);
         }
 
-        $startedAt = $cake->getBakingStartedAt();
-        $elapsed   = $startedAt ? (new \DateTimeImmutable())->getTimestamp() - $startedAt->getTimestamp() : 0;
+        $bakery        = $this->bakeryRepository->findOneBy([]);
+        $bakingSeconds = Config::bakingSecondsForLevel($bakery?->getUpgradeLevel(Upgrade::FASTER_OVEN) ?? 0);
+        $startedAt     = $cake->getBakingStartedAt();
+        $elapsed       = $startedAt ? (new \DateTimeImmutable())->getTimestamp() - $startedAt->getTimestamp() : 0;
 
-        if ($elapsed < Config::BAKING_SECONDS) {
+        if ($elapsed < $bakingSeconds) {
             return $this->redirectToRoute('cake_edit', ['id' => $order->getId(), 'cakeId' => $cake->getId()]);
         }
 
@@ -263,7 +266,7 @@ class CakeController extends AbstractController
             'unitMap'        => $unitMap,
             'canBake'        => $bakery && $this->inventoryService->canBake($cake, $bakery),
             'serverNow'      => (new \DateTimeImmutable())->getTimestamp(),
-            'bakingDuration' => Config::BAKING_SECONDS,
+            'bakingDuration' => Config::bakingSecondsForLevel($bakery?->getUpgradeLevel(Upgrade::FASTER_OVEN) ?? 0),
         ];
 
         try {
