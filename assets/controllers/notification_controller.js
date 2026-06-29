@@ -72,11 +72,11 @@ export default class extends Controller {
     }
 
     _toast(message, href, variant) {
-        const container = document.getElementById('toast-container');
+        const container = document.getElementById('notification-toast-container');
         if (!container) return;
 
         const el = document.createElement('div');
-        el.className = `toast align-items-center text-bg-${variant} border-0 show`;
+        el.className = `toast align-items-center text-bg-${variant} border-0 fade`;
         el.setAttribute('role', 'alert');
         el.innerHTML = `
             <div class="d-flex">
@@ -88,6 +88,13 @@ export default class extends Controller {
 
         el.querySelector('button').addEventListener('click', () => el.remove());
         container.appendChild(el);
-        setTimeout(() => el.remove(), 6000);
+
+        // Let the browser paint the element at opacity:0 before triggering the fade-in
+        requestAnimationFrame(() => el.classList.add('show'));
+
+        setTimeout(() => {
+            el.classList.remove('show');
+            el.addEventListener('transitionend', () => el.remove(), { once: true });
+        }, 6000);
     }
 }

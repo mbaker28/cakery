@@ -22,6 +22,8 @@
             {% block body %}{% endblock %}
         </main>
 
+        <div id="notification-toast-container" class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 1090;" data-turbo-permanent></div>
+
         <div id="toast-container" class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 1080;">
             {% for type, messages in app.flashes %}
                 {% for message in messages %}
