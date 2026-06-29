@@ -71,10 +71,10 @@
                 <div class="card-body">
                     <h5 class="card-title">Pantry</h5>
                     <ul class="list-unstyled small">
-                        {% for key, qty in bakery.inventory %}
-                            {% set unit = unitMap[key] ?? '' %}
+                        {% for key, unit in unitMap %}
+                            {% set qty = bakery.inventory[key] ?? 0 %}
                             <li class="d-flex justify-content-between">
-                                <span>{{ key|replace({'frosting_': '', 'topping_': '', '_': ' '})|title }}</span>
+                                <span>{{ key|replace({'_': ' '})|title }}</span>
                                 <span class="{{ qty < 3 ? 'text-danger' : 'text-muted' }}">{{ qty }}{{ unit ? ' ' ~ (qty == 1 ? unit : unit ~ 's') : '' }}</span>
                             </li>
                         {% endfor %}

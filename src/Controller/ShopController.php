@@ -3,10 +3,8 @@
 namespace App\Controller;
 
 use App\Config;
-use App\Enum\FrostingFlavor;
 use App\Enum\GamePhase;
 use App\Enum\Ingredient;
-use App\Enum\Topping;
 use App\Enum\Upgrade;
 use App\Repository\BakeryRepository;
 use App\Service\InventoryService;
@@ -40,7 +38,7 @@ class ShopController extends AbstractController
 
         return $this->render('game/shop.html.twig', [
             'bakery'        => $bakery,
-            'restockables'  => [...Ingredient::cases(), ...FrostingFlavor::cases(), ...Topping::cases()],
+            'restockables'  => Ingredient::cases(),
             'upgrades'      => Upgrade::cases(),
             'nextDayOrders' => Config::ordersForDay($bakery->getReputation()),
         ]);
@@ -94,7 +92,7 @@ class ShopController extends AbstractController
         }
 
         $value    = $request->request->getString('ingredient');
-        $item     = Ingredient::tryFrom($value) ?? FrostingFlavor::tryFrom($value) ?? Topping::tryFrom($value);
+        $item     = Ingredient::tryFrom($value);
         $quantity = max(1, $request->request->getInt('quantity', 5));
 
         $message = null;

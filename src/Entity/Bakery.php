@@ -2,11 +2,9 @@
 
 namespace App\Entity;
 
-use App\Enum\FrostingFlavor;
 use App\Enum\GamePhase;
 use App\Enum\Ingredient;
 use App\Enum\Restockable;
-use App\Enum\Topping;
 use App\Enum\Upgrade;
 use App\Repository\BakeryRepository;
 use Doctrine\ORM\Mapping as ORM;
@@ -75,12 +73,6 @@ class Bakery
         Ingredient::EGGS->value   => 24.0, // eggs
         Ingredient::SUGAR->value  => 4.0,  // bags
         Ingredient::MILK->value   => 3.0,  // gallons
-        FrostingFlavor::FROSTING_CHOCOLATE->value    => 3,
-        FrostingFlavor::FROSTING_VANILLA->value      => 3,
-        FrostingFlavor::FROSTING_CREAM_CHEESE->value => 3,
-        Topping::TOPPING_SPRINKLES->value        => 3,
-        Topping::TOPPING_CHOCOLATE_CHIPS->value  => 3,
-        Topping::TOPPING_STRAWBERRIES->value     => 3,
     ];
 
     public function getId(): ?int

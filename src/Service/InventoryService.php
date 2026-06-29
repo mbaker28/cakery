@@ -37,14 +37,6 @@ class InventoryService
             $requirements[$ingredient] = round($base * $multiplier, 4);
         }
 
-        if ($cake->getFrostingFlavor() !== null) {
-            $requirements[$cake->getFrostingFlavor()->inventoryKey()] = 1;
-        }
-
-        foreach ($cake->getToppings() ?? [] as $topping) {
-            $requirements[$topping->inventoryKey()] = 1;
-        }
-
         return $requirements;
     }
 

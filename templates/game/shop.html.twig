@@ -76,13 +76,10 @@
         {% endfor %}
     </div>
 
-    {% set groups = ['Base Ingredients', 'Frostings', 'Toppings'] %}
-    {% for group in groups %}
-        <h6 class="text-muted text-uppercase small fw-semibold mt-4 mb-2">{{ group }}</h6>
-        <div class="row g-3 mb-2">
-            {% for item in restockables|filter(i => i.group == group) %}
-                {{ include('game/_shop_card.html.twig') }}
-            {% endfor %}
-        </div>
-    {% endfor %}
+    <h6 class="text-muted text-uppercase small fw-semibold mt-4 mb-2">Ingredients</h6>
+    <div class="row g-3 mb-2">
+        {% for item in restockables %}
+            {{ include('game/_shop_card.html.twig') }}
+        {% endfor %}
+    </div>
 {% endblock %}

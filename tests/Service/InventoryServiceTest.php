@@ -80,34 +80,6 @@ class InventoryServiceTest extends TestCase
         }
     }
 
-    public function testFrostingAddedToRequirements(): void
-    {
-        $cake = $this->cake(CakeSize::CUPCAKE, 1)->setFrostingFlavor(FrostingFlavor::FROSTING_VANILLA);
-        $requirements = $this->service->getRequirements($cake);
-
-        $this->assertArrayHasKey('frosting_vanilla', $requirements);
-        $this->assertSame(1, $requirements['frosting_vanilla']);
-    }
-
-    public function testToppingAddedToRequirements(): void
-    {
-        $cake = $this->cake(CakeSize::CUPCAKE, 1)->setToppings([Topping::TOPPING_SPRINKLES, Topping::TOPPING_STRAWBERRIES]);
-        $requirements = $this->service->getRequirements($cake);
-
-        $this->assertSame(1, $requirements['topping_sprinkles']);
-        $this->assertSame(1, $requirements['topping_strawberries']);
-    }
-
-    public function testCanBakeChecksFrostingStock(): void
-    {
-        $cake = $this->cake(CakeSize::CUPCAKE, 1)->setFrostingFlavor(FrostingFlavor::FROSTING_VANILLA);
-        $this->bakery->setInventory([
-            'flour' => 20, 'butter' => 20, 'eggs' => 20, 'sugar' => 20, 'milk' => 20,
-            'frosting_vanilla' => 0,
-        ]);
-
-        $this->assertFalse($this->service->canBake($cake, $this->bakery));
-    }
 
     public function testCanBakeReturnsTrueWithSufficientInventory(): void
     {
