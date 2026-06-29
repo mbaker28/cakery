@@ -41,94 +41,92 @@
                 {% endif %}
             </div>
 
-            <turbo-frame id="orders">
-                {% if orders is empty %}
-                    <p class="text-muted">All done! Start the next day when you're ready.</p>
-                {% else %}
-                    <div class="row g-3">
-                        {% for order in orders %}
-                            {% set isUnspawned = order.spawnAt.timestamp > serverNow %}
-                            <div class="col-md-4 order-card {{ isUnspawned ? 'd-none' : '' }}"
-                                 data-controller="order-timer"
-                                 data-order-timer-spawn-at-value="{{ order.spawnAt.timestamp }}"
-                                 data-order-timer-fails-at-value="{{ order.failsAt ? order.failsAt.timestamp : 0 }}"
-                                 data-order-timer-server-now-value="{{ serverNow }}">
-                                <div class="card h-100 shadow-sm {{ order.status.value == 'in_progress' ? 'border-warning' : '' }}">
-                                    <div class="card-body">
-                                        <div class="d-flex align-items-start justify-content-between mb-3">
-                                            <div class="d-flex align-items-center gap-2">
-                                                <span class="fs-3">{{ order.avatar }}</span>
-                                                <div class="fw-semibold">{{ order.customerName }}</div>
-                                            </div>
-                                            <div style="min-width:90px">
-                                                <div class="text-end small mb-1" data-order-timer-target="patienceLabel">😊 Excited</div>
-                                                <div class="progress" style="height:5px">
-                                                    <div class="progress-bar bg-success" data-order-timer-target="patienceBar" style="width:100%"></div>
-                                                </div>
-                                            </div>
+            {% if orders is empty %}
+                <p class="text-muted">All done! Start the next day when you're ready.</p>
+            {% else %}
+                <div class="row g-3">
+                    {% for order in orders %}
+                        {% set isUnspawned = order.spawnAt.timestamp > serverNow %}
+                        <div class="col-md-4 order-card {{ isUnspawned ? 'd-none' : '' }}"
+                                data-controller="order-timer"
+                                data-order-timer-spawn-at-value="{{ order.spawnAt.timestamp }}"
+                                data-order-timer-fails-at-value="{{ order.failsAt ? order.failsAt.timestamp : 0 }}"
+                                data-order-timer-server-now-value="{{ serverNow }}">
+                            <div class="card h-100 shadow-sm {{ order.status.value == 'in_progress' ? 'border-warning' : '' }}">
+                                <div class="card-body">
+                                    <div class="d-flex align-items-start justify-content-between mb-3">
+                                        <div class="d-flex align-items-center gap-2">
+                                            <span class="fs-3">{{ order.avatar }}</span>
+                                            <div class="fw-semibold">{{ order.customerName }}</div>
                                         </div>
-                                        <ul class="list-unstyled small mb-3">
-                                            <li>🍰 {{ order.requiredFlavor.label }}</li>
-                                            <li>🎂 {{ order.requiredSize.value }}</li>
-                                            <li>📏 {{ order.requiredLayers }} layer{{ order.requiredLayers > 1 ? 's' : '' }}</li>
-                                            <li>🍦 {{ order.requiredFrostingFlavor.label }}</li>
-                                            {% if order.requiredToppings %}
-                                                <li>✨ {{ order.requiredToppings|map(t => t.label)|join(', ') }}</li>
-                                            {% endif %}
-                                        </ul>
-
-                                        {% if order.cake and order.cake.buildPhase.value == 'baking' %}
-                                            <div class="mb-3"
-                                                 data-controller="baking-timer"
-                                                 data-baking-timer-started-at-value="{{ order.cake.bakingStartedAt.timestamp }}"
-                                                 data-baking-timer-duration-value="{{ bakingDuration }}"
-                                                 data-baking-timer-server-now-value="{{ serverNow }}">
-                                                <div class="d-flex justify-content-between small mb-1">
-                                                    <span class="text-warning fw-semibold" data-baking-timer-target="label">Baking…</span>
-                                                    <span class="text-muted" data-baking-timer-target="seconds"></span>
-                                                </div>
-                                                <div class="progress" style="height:4px">
-                                                    <div class="progress-bar bg-warning progress-bar-striped progress-bar-animated"
-                                                         data-baking-timer-target="progressBar"
-                                                         style="width:0%"></div>
-                                                </div>
+                                        <div style="min-width:90px">
+                                            <div class="text-end small mb-1" data-order-timer-target="patienceLabel">😊 Excited</div>
+                                            <div class="progress" style="height:5px">
+                                                <div class="progress-bar bg-success" data-order-timer-target="patienceBar" style="width:100%"></div>
                                             </div>
-                                        {% elseif order.cake and order.cake.buildPhase.value == 'decorating' %}
-                                            <div class="mb-3">
-                                                <span class="badge bg-success fs-6">✅ Ready to decorate!</span>
-                                            </div>
-                                        {% endif %}
-
-                                        <div class="d-flex justify-content-between align-items-center">
-                                            <span class="text-success fw-semibold">${{ order.payout|number_format(2) }}</span>
-                                            {% if order.status.value == 'in_progress' %}
-                                                {% set buildPhase = order.cake ? order.cake.buildPhase.value : 'mixing' %}
-                                                <form method="post" action="{{ path('cake_build', {id: order.id}) }}" data-turbo-frame="_top">
-                                                    {% if buildPhase == 'baking' %}
-                                                        <button class="btn btn-warning btn-sm">In Oven 🔥</button>
-                                                    {% elseif buildPhase == 'decorating' %}
-                                                        <button class="btn btn-success btn-sm">Decorate →</button>
-                                                    {% else %}
-                                                        <button class="btn btn-warning btn-sm">Continue →</button>
-                                                    {% endif %}
-                                                </form>
-                                            {% else %}
-                                                <form method="post" action="{{ path('cake_build', {id: order.id}) }}" data-turbo-frame="_top">
-                                                    <button class="btn btn-primary btn-sm">Bake</button>
-                                                </form>
-                                            {% endif %}
                                         </div>
                                     </div>
+                                    <ul class="list-unstyled small mb-3">
+                                        <li>🍰 {{ order.requiredFlavor.label }}</li>
+                                        <li>🎂 {{ order.requiredSize.value }}</li>
+                                        <li>📏 {{ order.requiredLayers }} layer{{ order.requiredLayers > 1 ? 's' : '' }}</li>
+                                        <li>🍦 {{ order.requiredFrostingFlavor.label }}</li>
+                                        {% if order.requiredToppings %}
+                                            <li>✨ {{ order.requiredToppings|map(t => t.label)|join(', ') }}</li>
+                                        {% endif %}
+                                    </ul>
+
+                                    {% if order.cake and order.cake.buildPhase.value == 'baking' %}
+                                        <div class="mb-3"
+                                                data-controller="baking-timer"
+                                                data-baking-timer-started-at-value="{{ order.cake.bakingStartedAt.timestamp }}"
+                                                data-baking-timer-duration-value="{{ bakingDuration }}"
+                                                data-baking-timer-server-now-value="{{ serverNow }}">
+                                            <div class="d-flex justify-content-between small mb-1">
+                                                <span class="text-warning fw-semibold" data-baking-timer-target="label">Baking…</span>
+                                                <span class="text-muted" data-baking-timer-target="seconds"></span>
+                                            </div>
+                                            <div class="progress" style="height:4px">
+                                                <div class="progress-bar bg-warning progress-bar-striped progress-bar-animated"
+                                                        data-baking-timer-target="progressBar"
+                                                        style="width:0%"></div>
+                                            </div>
+                                        </div>
+                                    {% elseif order.cake and order.cake.buildPhase.value == 'decorating' %}
+                                        <div class="mb-3">
+                                            <span class="badge bg-success fs-6">✅ Ready to decorate!</span>
+                                        </div>
+                                    {% endif %}
+
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <span class="text-success fw-semibold">${{ order.payout|number_format(2) }}</span>
+                                        {% if order.status.value == 'in_progress' %}
+                                            {% set buildPhase = order.cake ? order.cake.buildPhase.value : 'mixing' %}
+                                            <form method="post" action="{{ path('cake_build', {id: order.id}) }}">
+                                                {% if buildPhase == 'baking' %}
+                                                    <button class="btn btn-warning btn-sm">In Oven 🔥</button>
+                                                {% elseif buildPhase == 'decorating' %}
+                                                    <button class="btn btn-success btn-sm">Decorate →</button>
+                                                {% else %}
+                                                    <button class="btn btn-warning btn-sm">Continue →</button>
+                                                {% endif %}
+                                            </form>
+                                        {% else %}
+                                            <form method="post" action="{{ path('cake_build', {id: order.id}) }}">
+                                                <button class="btn btn-primary btn-sm">Bake</button>
+                                            </form>
+                                        {% endif %}
+                                    </div>
                                 </div>
-                                {% if order.failsAt %}
-                                    <form method="post" action="{{ path('order_expire', {id: order.id}) }}"
-                                          data-order-timer-target="expireForm" class="d-none"></form>
-                                {% endif %}
                             </div>
-                        {% endfor %}
-                    </div>
-                {% endif %}
-            </turbo-frame>
+                            {% if order.failsAt %}
+                                <form method="post" action="{{ path('order_expire', {id: order.id}) }}"
+                                        data-order-timer-target="expireForm" class="d-none"></form>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
         </div>
 
         <div class="col-md-3">
