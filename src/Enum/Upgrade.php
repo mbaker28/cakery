@@ -27,7 +27,7 @@ enum Upgrade: string
             self::FASTER_OVEN  => 'Upgrade your oven to reduce baking time.',
             self::DOORBELL     => 'Get notified when a new order arrives.',
             self::OVEN_ALARM   => 'Get notified when a cake is done baking.',
-            self::DISPLAY_CASE => 'Perfect cakes earn 25% more.',
+            self::DISPLAY_CASE => 'Perfect cakes earn 25% more (only when customer is still excited).',
             self::RECIPE_BOOK  => 'Unlock new frostings and toppings.',
         };
     }

@@ -160,17 +160,19 @@ class GameController extends AbstractController
             return $this->redirectToRoute('game_index');
         }
 
-        $total     = $bakery->getDayTotalOrders() ?? 0;
-        $completed = $bakery->getOrdersCompleted() - ($bakery->getDayStartOrdersCompleted() ?? 0);
-        $failed    = $bakery->getOrdersFailed()    - ($bakery->getDayStartOrdersFailed()    ?? 0);
-        $earned    = $bakery->getMoney()            - ($bakery->getDayStartMoney()           ?? $bakery->getMoney());
-        $repChange = $bakery->getReputation()       - ($bakery->getDayStartReputation()      ?? $bakery->getReputation());
+        $total          = $bakery->getDayTotalOrders() ?? 0;
+        $completed      = $bakery->getOrdersCompleted() - ($bakery->getDayStartOrdersCompleted() ?? 0);
+        $failed         = $bakery->getOrdersFailed()    - ($bakery->getDayStartOrdersFailed()    ?? 0);
+        $earned         = $bakery->getMoney()            - ($bakery->getDayStartMoney()           ?? $bakery->getMoney());
+        $repChange      = $bakery->getReputation()       - ($bakery->getDayStartReputation()      ?? $bakery->getReputation());
+        $perfectOrders  = $bakery->getPerfectOrders()    - ($bakery->getDayStartPerfectOrders()   ?? 0);
+        $allExcited     = $completed > 0 && $perfectOrders === $completed;
 
         $rating = match(true) {
-            $total > 0 && $completed === $total          => 'perfect',
-            $total > 0 && $completed / $total >= 0.75   => 'great',
-            $total > 0 && $completed / $total >= 0.4    => 'decent',
-            default                                      => 'rough',
+            $total > 0 && $completed === $total && $allExcited => 'perfect',
+            $total > 0 && $completed / $total >= 0.75          => 'great',
+            $total > 0 && $completed / $total >= 0.4           => 'decent',
+            default                                             => 'rough',
         };
 
         return $this->render('game/day_summary.html.twig', [
@@ -254,6 +256,7 @@ class GameController extends AbstractController
         $bakery->setDayStartReputation($bakery->getReputation());
         $bakery->setDayStartOrdersCompleted($bakery->getOrdersCompleted());
         $bakery->setDayStartOrdersFailed($bakery->getOrdersFailed());
+        $bakery->setDayStartPerfectOrders($bakery->getPerfectOrders());
         $bakery->setDayTotalOrders(Config::ordersForDay($bakery->getReputation()));
     }
 

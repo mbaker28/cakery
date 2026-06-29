@@ -57,6 +57,12 @@ class Bakery
     #[ORM\Column(nullable: true)]
     private ?int $dayTotalOrders = null;
 
+    #[ORM\Column]
+    private int $perfectOrders = 0;
+
+    #[ORM\Column(nullable: true)]
+    private ?int $dayStartPerfectOrders = null;
+
     /**
      * @var array<string, int> $upgrades
      */
@@ -251,6 +257,30 @@ class Bakery
     public function setDayTotalOrders(?int $dayTotalOrders): static
     {
         $this->dayTotalOrders = $dayTotalOrders;
+
+        return $this;
+    }
+
+    public function getPerfectOrders(): int
+    {
+        return $this->perfectOrders;
+    }
+
+    public function setPerfectOrders(int $perfectOrders): static
+    {
+        $this->perfectOrders = $perfectOrders;
+
+        return $this;
+    }
+
+    public function getDayStartPerfectOrders(): ?int
+    {
+        return $this->dayStartPerfectOrders;
+    }
+
+    public function setDayStartPerfectOrders(?int $dayStartPerfectOrders): static
+    {
+        $this->dayStartPerfectOrders = $dayStartPerfectOrders;
 
         return $this;
     }

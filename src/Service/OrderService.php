@@ -13,6 +13,12 @@ class OrderService
     private const MIN_QUALITY        = 60.0;
     private const REPUTATION_PENALTY = 10;
 
+    // Elapsed fraction thresholds mirroring order_timer_controller.js patience levels
+    private const EXCITED_THRESHOLD   = 0.25; // remaining > 0.75
+    private const HAPPY_THRESHOLD     = 0.50; // remaining > 0.50
+    private const WAITING_THRESHOLD   = 0.70; // remaining > 0.30
+    private const IMPATIENT_THRESHOLD = 0.85; // remaining > 0.15
+
     public function fulfill(CakeOrder $order, Bakery $bakery): float
     {
         $cake = $order->getCake();
@@ -21,22 +27,28 @@ class OrderService
             throw new \LogicException('The cake must be baked before fulfilling an order.');
         }
 
-        $quality = $this->matchQuality($cake, $order);
+        $fraction = $this->elapsedFraction($order) ?? 0.0;
+        $quality  = max(0.0, $this->matchQuality($cake, $order) - $this->patiencePenalty($fraction));
 
         if ($quality < self::MIN_QUALITY) {
             $this->fail($order, $bakery);
             return 0.0;
         }
 
-        $earned = $order->getPayout() * ($quality / 100.0) * $this->timeMultiplier($order);
+        $excited = $fraction < self::EXCITED_THRESHOLD;
+        $earned  = $order->getPayout() * ($quality / 100.0) * $this->timeMultiplier($order);
 
-        if ($quality === 100.0 && $bakery->hasUpgrade(Upgrade::DISPLAY_CASE)) {
+        if ($quality === 100.0 && $excited && $bakery->hasUpgrade(Upgrade::DISPLAY_CASE)) {
             $earned *= 1.25;
         }
 
         $bakery->setMoney($bakery->getMoney() + $earned);
         $bakery->setReputation(min(100, $bakery->getReputation() + ($order->getHappinessBonus() ?? 5)));
         $bakery->setOrdersCompleted($bakery->getOrdersCompleted() + 1);
+
+        if ($excited) {
+            $bakery->setPerfectOrders($bakery->getPerfectOrders() + 1);
+        }
 
         $order->setStatus(OrderStatus::FULFILLED);
 
@@ -98,23 +110,47 @@ class OrderService
      */
     private function timeMultiplier(CakeOrder $order): float
     {
-        if ($order->getSpawnAt() === null || $order->getFailsAt() === null) {
+        $fraction = $this->elapsedFraction($order);
+
+        if ($fraction === null) {
             return 1.0;
         }
-
-        $total   = $order->getFailsAt()->getTimestamp() - $order->getSpawnAt()->getTimestamp();
-        $elapsed = (new \DateTimeImmutable())->getTimestamp() - $order->getSpawnAt()->getTimestamp();
-
-        if ($total <= 0) {
-            return 1.0;
-        }
-
-        $fraction = max(0.0, min(1.0, $elapsed / $total));
 
         return match (true) {
             $fraction < 0.33 => 1.2,  // fast: +20%
             $fraction > 0.75 => 0.85, // slow: -15%
             default          => 1.0,
         };
+    }
+
+    /**
+     * Quality penalty based on customer patience at fulfillment time.
+     * Mirrors the patience thresholds in order_timer_controller.js.
+     */
+    private function patiencePenalty(float $fraction): float
+    {
+        return match (true) {
+            $fraction < self::EXCITED_THRESHOLD   => 0.0,  // 😊 Excited
+            $fraction < self::HAPPY_THRESHOLD     => 5.0,  // 🙂 Happy
+            $fraction < self::WAITING_THRESHOLD   => 15.0, // 😐 Waiting
+            $fraction < self::IMPATIENT_THRESHOLD => 25.0, // 😤 Impatient
+            default                               => 40.0, // 😡 Leaving soon
+        };
+    }
+
+    private function elapsedFraction(CakeOrder $order): ?float
+    {
+        if ($order->getSpawnAt() === null || $order->getFailsAt() === null) {
+            return null;
+        }
+
+        $total   = $order->getFailsAt()->getTimestamp() - $order->getSpawnAt()->getTimestamp();
+        $elapsed = (new \DateTimeImmutable())->getTimestamp() - $order->getSpawnAt()->getTimestamp();
+
+        if ($total <= 0) {
+            return null;
+        }
+
+        return max(0.0, min(1.0, $elapsed / $total));
     }
 }
