@@ -5,14 +5,10 @@ namespace App\Controller;
 use App\Config;
 use App\Entity\Bakery;
 use App\Entity\CakeOrder;
-use App\Enum\FrostingFlavor;
 use App\Enum\GamePhase;
-use App\Enum\Ingredient;
 use App\Enum\OrderStatus;
-use App\Enum\Topping;
 use App\Repository\BakeryRepository;
 use App\Repository\CakeOrderRepository;
-use App\Service\InventoryService;
 use App\Service\OrderGeneratorService;
 use App\Service\OrderService;
 use Doctrine\ORM\EntityManagerInterface;
@@ -20,7 +16,6 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
-use Symfony\UX\Turbo\TurboBundle;
 
 class GameController extends AbstractController
 {
@@ -29,7 +24,6 @@ class GameController extends AbstractController
         private readonly CakeOrderRepository $cakeOrderRepository,
         private readonly OrderGeneratorService $orderGeneratorService,
         private readonly OrderService $orderService,
-        private readonly InventoryService $inventoryService,
         private readonly EntityManagerInterface $em,
     ) {}
 
@@ -189,26 +183,6 @@ class GameController extends AbstractController
         ]);
     }
 
-    #[Route('/shop', name: 'game_shop', methods: ['GET'])]
-    public function shop(): Response
-    {
-        $bakery = $this->bakeryRepository->findOneBy([]);
-
-        if ($bakery === null) {
-            return $this->redirectToRoute('game_new');
-        }
-
-        if ($bakery->getPhase() === GamePhase::DAY) {
-            return $this->redirectToRoute('game_index');
-        }
-
-        return $this->render('game/shop.html.twig', [
-            'bakery'        => $bakery,
-            'restockables'  => [...Ingredient::cases(), ...FrostingFlavor::cases(), ...Topping::cases()],
-            'nextDayOrders' => Config::ordersForDay($bakery->getReputation()),
-        ]);
-    }
-
     #[Route('/start-day', name: 'game_start_day', methods: ['POST'])]
     public function startDay(): Response
     {
@@ -247,52 +221,6 @@ class GameController extends AbstractController
         }
 
         return $this->redirectToRoute('game_index');
-    }
-
-    #[Route('/shop/restock', name: 'game_restock', methods: ['POST'])]
-    public function restock(Request $request): Response
-    {
-        $bakery = $this->bakeryRepository->findOneBy([]);
-
-        if ($bakery === null || $bakery->getPhase() !== GamePhase::SHOP) {
-            return $this->redirectToRoute('game_index');
-        }
-
-        $value    = $request->request->getString('ingredient');
-        $item     = Ingredient::tryFrom($value) ?? FrostingFlavor::tryFrom($value) ?? Topping::tryFrom($value);
-        $quantity = max(1, $request->request->getInt('quantity', 5));
-
-        $message = null;
-        $success = false;
-
-        if ($item !== null) {
-            try {
-                $this->inventoryService->restock($item, $quantity, $bakery);
-                $this->em->flush();
-                $message = sprintf('Restocked %d× %s.', $quantity, $item->label());
-                $success = true;
-            } catch (\RuntimeException) {
-                $message = 'Not enough money.';
-            }
-        }
-
-        if (TurboBundle::STREAM_FORMAT === $request->getPreferredFormat()) {
-            $request->setRequestFormat(TurboBundle::STREAM_FORMAT);
-
-            return $this->render('game/_restock.stream.html.twig', [
-                'bakery'   => $bakery,
-                'item'     => $item,
-                'success'  => $success,
-                'message'  => $message,
-                'quantity' => $quantity,
-            ]);
-        }
-
-        if ($message !== null) {
-            $this->addFlash($success ? 'success' : 'danger', $message);
-        }
-
-        return $this->redirectToRoute('game_shop');
     }
 
     #[Route('/results', name: 'game_results', methods: ['GET'])]
