@@ -333,7 +333,7 @@ export default class extends Controller {
 
         if (toppings.includes('topping_sprinkles')) {
             for (let i = 0; i < 13; i++) {
-                const sx    = x + 5 + (i * 43) % Math.max(1, w - 10);
+                const sx    = x + 5 + Math.round((w - 10) * i / 12);
                 const sy    = ty - 2 + (i % 3) * 2;
                 const angle = (i * 59 % 160) * Math.PI / 180;
                 ctx.save();
@@ -347,7 +347,7 @@ export default class extends Controller {
 
         if (toppings.includes('topping_chocolate_chips')) {
             for (let i = 0; i < 6; i++) {
-                const ex = x + 9 + (i * 47) % Math.max(1, w - 18);
+                const ex = x + 9 + Math.round((w - 18) * i / 5);
                 const ey = ty + (i % 2) * 3 - 1;
                 ctx.fillStyle = C.chip;
                 ctx.beginPath();
@@ -358,7 +358,7 @@ export default class extends Controller {
 
         if (toppings.includes('topping_strawberries')) {
             for (let i = 0; i < 3; i++) {
-                const sx = x + 12 + (i * 61) % Math.max(1, w - 24);
+                const sx = Math.round(x + w * (i + 1) / 4);
                 const sy = ty - fh * 0.4;
                 ctx.fillStyle = C.berry;
                 ctx.beginPath();
