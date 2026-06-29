@@ -1,4 +1,5 @@
 <div id="ingredient-status">
+    {% if cake.buildPhase.value == 'mixing' %}
     <div class="mb-4">
         <label class="form-label fw-semibold">Ingredients needed</label>
         {% if requirements %}
@@ -18,6 +19,7 @@
             <p class="text-muted small mb-0">Select a size and layer count to see requirements.</p>
         {% endif %}
     </div>
+    {% endif %}
 
     {% if cake.buildPhase.value == 'mixing' %}
         <form method="post" action="{{ path('cake_start_baking', {id: order.id, cakeId: cake.id}) }}" data-turbo-frame="_top">
@@ -30,14 +32,11 @@
             <p class="text-danger small mt-2 mb-0">Not enough ingredients.</p>
         {% endif %}
     {% else %}
-        <form method="post" action="{{ path('cake_bake', {id: order.id, cakeId: cake.id}) }}" data-turbo-frame="_top">
+        <form method="post" action="{{ path('cake_submit', {id: order.id, cakeId: cake.id}) }}" data-turbo-frame="_top">
             <button class="btn btn-success w-100"
-                    {{ not canBake or not cake.frostingFlavor ? 'disabled' : '' }}>
+                    {{ not cake.frostingFlavor ? 'disabled' : '' }}>
                 ✅ Submit Order
             </button>
         </form>
-        {% if not canBake %}
-            <p class="text-danger small mt-2 mb-0">Not enough ingredients.</p>
-        {% endif %}
     {% endif %}
 </div>

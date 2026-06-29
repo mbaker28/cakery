@@ -178,6 +178,13 @@ class CakeController extends AbstractController
             return $this->redirectToRoute('cake_edit', ['id' => $order->getId(), 'cakeId' => $cake->getId()]);
         }
 
+        $bakery = $this->bakeryRepository->findOneBy([]);
+
+        if ($bakery === null || !$this->inventoryService->canBake($cake, $bakery)) {
+            return $this->renderBuilder($order, $cake, fullPage: true);
+        }
+
+        $this->inventoryService->deduct($cake, $bakery);
         $cake->setBuildPhase(CakeBuildPhase::BAKING);
         $cake->setBakingStartedAt(new \DateTimeImmutable());
         $this->em->flush();
@@ -210,8 +217,8 @@ class CakeController extends AbstractController
         return $this->redirectToRoute('cake_edit', ['id' => $order->getId(), 'cakeId' => $cake->getId()]);
     }
 
-    #[Route('/{cakeId}/bake', name: 'cake_bake', requirements: ['cakeId' => '\d+'], methods: ['POST'])]
-    public function bake(CakeOrder $order, int $cakeId): Response
+    #[Route('/{cakeId}/submit', name: 'cake_submit', requirements: ['cakeId' => '\d+'], methods: ['POST'])]
+    public function submit(CakeOrder $order, int $cakeId): Response
     {
         $cake   = $this->getCakeOr404($order, $cakeId);
         $bakery = $this->bakeryRepository->findOneBy([]);
@@ -220,11 +227,10 @@ class CakeController extends AbstractController
             return $this->redirectToRoute('cake_edit', ['id' => $order->getId(), 'cakeId' => $cake->getId()]);
         }
 
-        if ($bakery === null || !$this->inventoryService->canBake($cake, $bakery)) {
+        if ($bakery === null) {
             return $this->renderBuilder($order, $cake, fullPage: true);
         }
 
-        $this->inventoryService->deduct($cake, $bakery);
         $result = $this->orderService->fulfill($order, $bakery);
 
         $this->em->flush();
