@@ -2,6 +2,7 @@
 
 namespace App\Service;
 
+use App\Config;
 use App\Entity\CakeOrder;
 use App\Enum\CakeFlavor;
 use App\Enum\CakeSize;
@@ -59,7 +60,7 @@ class OrderGeneratorService
         3 => [15, 20],
     ];
 
-    public function generate(int $reputation, int $recipeBookLevel = 0): CakeOrder
+    public function generate(int $reputation, int $recipeBookLevel = 0, bool $isVip = false): CakeOrder
     {
         $tier     = $this->tier($reputation);
         $size     = $this->pick(self::SIZES_BY_TIER[$tier]);
@@ -76,6 +77,10 @@ class OrderGeneratorService
             + (count($toppings) * self::PAYOUT_PER_TOPPING)
             + ($tier * self::PAYOUT_PER_TIER);
 
+        if ($isVip) {
+            $payout *= Config::VIP_PAYOUT_MULTIPLIER;
+        }
+
         [$minBonus, $maxBonus] = self::HAPPINESS_BONUS_BY_TIER[$tier];
 
         return (new CakeOrder())
@@ -88,7 +93,8 @@ class OrderGeneratorService
             ->setRequiredLayers($layers)
             ->setRequiredToppings($toppings ?: null)
             ->setPayout($payout)
-            ->setHappinessBonus(random_int($minBonus, $maxBonus));
+            ->setHappinessBonus(random_int($minBonus, $maxBonus))
+            ->setIsVip($isVip);
     }
 
     // Weights per [tier1, tier2, tier3] at each max tier.

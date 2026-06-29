@@ -268,16 +268,30 @@ class GameController extends AbstractController
 
     private function spawnOrdersForDay(Bakery $bakery): void
     {
-        $count = Config::ordersForDay($bakery->getReputation());
-        $now   = new \DateTimeImmutable();
+        $reputation = $bakery->getReputation();
+        $count      = Config::ordersForDay($reputation);
+        $now        = new \DateTimeImmutable();
+
+        $vipCount = match(true) {
+            $reputation >= 70 => 2,
+            $reputation >= 40 => 1,
+            default           => 0,
+        };
+        $vipCount = min($vipCount, $count);
+
+        $slots    = range(0, $count - 1);
+        shuffle($slots);
+        $vipSlots = array_flip(array_slice($slots, 0, $vipCount));
 
         for ($i = 0; $i < $count; $i++) {
+            $isVip   = isset($vipSlots[$i]);
             $spawnAt = $now->modify('+' . ($i * Config::SPAWN_INTERVAL) . ' seconds');
-            $failsAt = $spawnAt->modify('+' . Config::SECONDS_PER_ORDER . ' seconds');
+            $failsAt = $spawnAt->modify('+' . ($isVip ? Config::VIP_SECONDS_PER_ORDER : Config::SECONDS_PER_ORDER) . ' seconds');
 
             $order = $this->orderGeneratorService->generate(
-                $bakery->getReputation(),
-                $bakery->getUpgradeLevel(Upgrade::RECIPE_BOOK)
+                $reputation,
+                $bakery->getUpgradeLevel(Upgrade::RECIPE_BOOK),
+                $isVip
             );
             $order->setSpawnAt($spawnAt);
             $order->setFailsAt($failsAt);

@@ -52,12 +52,17 @@
                                 data-order-timer-spawn-at-value="{{ order.spawnAt.timestamp }}"
                                 data-order-timer-fails-at-value="{{ order.failsAt ? order.failsAt.timestamp : 0 }}"
                                 data-order-timer-server-now-value="{{ serverNow }}">
-                            <div class="card h-100 shadow-sm {{ order.status.value == 'in_progress' ? 'border-warning' : '' }}">
+                            <div class="card h-100 shadow-sm {{ order.isVip ? 'border-warning border-2' : (order.status.value == 'in_progress' ? 'border-warning' : '') }}">
                                 <div class="card-body">
                                     <div class="d-flex align-items-start justify-content-between mb-3">
                                         <div class="d-flex align-items-center gap-2">
                                             <span class="fs-3">{{ order.avatar }}</span>
-                                            <div class="fw-semibold">{{ order.customerName }}</div>
+                                            <div>
+                                                <div class="fw-semibold">{{ order.customerName }}</div>
+                                                {% if order.isVip %}
+                                                    <span class="badge bg-warning text-dark" style="font-size:0.65rem">⭐ VIP</span>
+                                                {% endif %}
+                                            </div>
                                         </div>
                                         <div style="min-width:90px">
                                             <div class="text-end small mb-1" data-order-timer-target="patienceLabel">😊 Excited</div>

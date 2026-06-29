@@ -2,6 +2,7 @@
 
 namespace App\Service;
 
+use App\Config;
 use App\Entity\Bakery;
 use App\Entity\Cake;
 use App\Entity\CakeOrder;
@@ -60,7 +61,8 @@ class OrderService
 
     public function fail(CakeOrder $order, Bakery $bakery): void
     {
-        $bakery->setReputation(max(0, $bakery->getReputation() - self::REPUTATION_PENALTY));
+        $penalty = $order->isVip() ? Config::VIP_REPUTATION_PENALTY : self::REPUTATION_PENALTY;
+        $bakery->setReputation(max(0, $bakery->getReputation() - $penalty));
         $bakery->setOrdersFailed($bakery->getOrdersFailed() + 1);
 
         $order->setStatus(OrderStatus::FAILED);

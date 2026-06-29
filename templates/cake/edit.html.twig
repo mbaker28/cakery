@@ -29,7 +29,12 @@
             <div class="card shadow-sm h-100">
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-start mb-1">
-                        <h5 class="card-title mb-0">{{ order.customerName }}'s Order</h5>
+                        <div>
+                            <h5 class="card-title mb-0">{{ order.customerName }}'s Order</h5>
+                            {% if order.isVip %}
+                                <span class="badge bg-warning text-dark mt-1" style="font-size:0.65rem">⭐ VIP</span>
+                            {% endif %}
+                        </div>
                         {% if order.failsAt %}
                             <div style="min-width:100px">
                                 <div class="text-end small mb-1" data-order-timer-target="patienceLabel">😊 Excited</div>

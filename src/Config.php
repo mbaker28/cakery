@@ -10,6 +10,15 @@ class Config
     /** Seconds the player has to fulfil an order after it spawns */
     public const SECONDS_PER_ORDER = 120;
 
+    /** Shorter window for VIP orders */
+    public const VIP_SECONDS_PER_ORDER = 70;
+
+    /** Payout multiplier for VIP orders */
+    public const VIP_PAYOUT_MULTIPLIER = 1.75;
+
+    /** Reputation penalty for failing a VIP order */
+    public const VIP_REPUTATION_PENALTY = 20;
+
     /** Seconds the cake spends in the oven between mixing and decorating */
     public const BAKING_SECONDS = 15;
 

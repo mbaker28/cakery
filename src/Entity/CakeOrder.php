@@ -58,6 +58,9 @@ class CakeOrder
     #[ORM\Column]
     private ?int $requiredLayers = null;
 
+    #[ORM\Column]
+    private bool $isVip = false;
+
     public function getId(): ?int
     {
         return $this->id;
@@ -227,6 +230,18 @@ class CakeOrder
     public function setRequiredLayers(int $requiredLayers): static
     {
         $this->requiredLayers = $requiredLayers;
+
+        return $this;
+    }
+
+    public function isVip(): bool
+    {
+        return $this->isVip;
+    }
+
+    public function setIsVip(bool $isVip): static
+    {
+        $this->isVip = $isVip;
 
         return $this;
     }
