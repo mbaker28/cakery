@@ -152,9 +152,10 @@ class OrderServiceTest extends TestCase
             ->setSpawnAt($now->modify('-20 seconds'))   // 17% elapsed, excited (no penalty) + fast time bonus
             ->setFailsAt($now->modify('+100 seconds'));
 
-        $earned = $this->service->fulfill($this->order, $this->bakery);
+        $result = $this->service->fulfill($this->order, $this->bakery);
 
-        $this->assertEqualsWithDelta(120.0, $earned, 0.01); // 100 * 1.0 quality * 1.2 time
+        $this->assertEqualsWithDelta(120.0, $result['earned'], 0.01); // 100 * 1.0 quality * 1.2 time
+        $this->assertTrue($result['excited']);
         $this->assertEqualsWithDelta(220.0, $this->bakery->getMoney(), 0.01);
         $this->assertSame(1, $this->bakery->getPerfectOrders());
     }
@@ -167,9 +168,10 @@ class OrderServiceTest extends TestCase
             ->setSpawnAt($now->modify('-100 seconds'))  // 83% elapsed, impatient (-25 quality) + slow time
             ->setFailsAt($now->modify('+20 seconds'));
 
-        $earned = $this->service->fulfill($this->order, $this->bakery);
+        $result = $this->service->fulfill($this->order, $this->bakery);
 
-        $this->assertEqualsWithDelta(63.75, $earned, 0.01); // 100 * 0.75 quality * 0.85 time
+        $this->assertEqualsWithDelta(63.75, $result['earned'], 0.01); // 100 * 0.75 quality * 0.85 time
+        $this->assertFalse($result['excited']);
         $this->assertEqualsWithDelta(163.75, $this->bakery->getMoney(), 0.01);
         $this->assertSame(0, $this->bakery->getPerfectOrders());
     }
@@ -182,9 +184,10 @@ class OrderServiceTest extends TestCase
             ->setSpawnAt($now->modify('-60 seconds'))   // 50% elapsed, waiting (-15 quality) + normal time
             ->setFailsAt($now->modify('+60 seconds'));
 
-        $earned = $this->service->fulfill($this->order, $this->bakery);
+        $result = $this->service->fulfill($this->order, $this->bakery);
 
-        $this->assertEqualsWithDelta(85.0, $earned, 0.01); // 100 * 0.85 quality * 1.0 time
+        $this->assertEqualsWithDelta(85.0, $result['earned'], 0.01); // 100 * 0.85 quality * 1.0 time
+        $this->assertFalse($result['excited']);
         $this->assertEqualsWithDelta(185.0, $this->bakery->getMoney(), 0.01);
         $this->assertSame(0, $this->bakery->getPerfectOrders());
     }
@@ -213,9 +216,10 @@ class OrderServiceTest extends TestCase
         // No spawnAt/failsAt, defaults to 1.0 multiplier and no patience penalty
         $this->order->setCake($this->matchingCake());
 
-        $earned = $this->service->fulfill($this->order, $this->bakery);
+        $result = $this->service->fulfill($this->order, $this->bakery);
 
-        $this->assertSame(100.0, $earned);
+        $this->assertSame(100.0, $result['earned']);
+        $this->assertTrue($result['excited']); // no timer defaults to excited
     }
 
     public function testFailDeductsReputationAndIncrementsOrdersFailed(): void

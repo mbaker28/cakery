@@ -225,16 +225,26 @@ class CakeController extends AbstractController
         }
 
         $this->inventoryService->deduct($cake, $bakery);
-        $earned = $this->orderService->fulfill($order, $bakery);
+        $result = $this->orderService->fulfill($order, $bakery);
 
         $this->em->flush();
 
         if ($order->getStatus() === OrderStatus::FULFILLED) {
-            $this->addFlash('success', sprintf(
-                '%s loved it! You earned $%.2f.',
-                $order->getCustomerName(),
-                $earned
-            ));
+            $name    = $order->getCustomerName();
+            $earned  = $result['earned'];
+            $quality = $result['quality'];
+            $excited = $result['excited'];
+
+            $reaction = match(true) {
+                $excited && $quality === 100.0 => "$name was thrilled!",
+                $excited && $quality >= 85.0   => "$name loved it!",
+                $excited && $quality >= 70.0   => "$name was happy with it.",
+                $excited                       => "$name thought it was alright.",
+                $quality >= 85.0               => "$name liked it, but wished it came sooner.",
+                default                        => "$name was a bit disappointed by the wait.",
+            };
+
+            $this->addFlash('success', sprintf('%s You earned $%.2f.', $reaction, $earned));
         } else {
             $this->addFlash('danger', sprintf(
                 "%s's order failed — the cake quality was too low.",

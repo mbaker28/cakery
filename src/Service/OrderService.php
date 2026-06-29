@@ -19,7 +19,10 @@ class OrderService
     private const WAITING_THRESHOLD   = 0.70; // remaining > 0.30
     private const IMPATIENT_THRESHOLD = 0.85; // remaining > 0.15
 
-    public function fulfill(CakeOrder $order, Bakery $bakery): float
+    /**
+     * @return array{earned: float, quality: float, excited: bool}
+     */
+    public function fulfill(CakeOrder $order, Bakery $bakery): array
     {
         $cake = $order->getCake();
 
@@ -32,7 +35,7 @@ class OrderService
 
         if ($quality < self::MIN_QUALITY) {
             $this->fail($order, $bakery);
-            return 0.0;
+            return ['earned' => 0.0, 'quality' => $quality, 'excited' => false];
         }
 
         $excited = $fraction < self::EXCITED_THRESHOLD;
@@ -52,7 +55,7 @@ class OrderService
 
         $order->setStatus(OrderStatus::FULFILLED);
 
-        return $earned;
+        return ['earned' => $earned, 'quality' => $quality, 'excited' => $excited];
     }
 
     public function fail(CakeOrder $order, Bakery $bakery): void
