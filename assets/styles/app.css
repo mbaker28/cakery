@@ -1,3 +1,10 @@
 body {
     background-color: skyblue;
 }
+
+.grade-S { background: linear-gradient(135deg, #f5c400 0%, #e09800 100%); color: #2d2000; }
+.grade-A { background: linear-gradient(135deg, #1a7a4a 0%, #135c38 100%); color: #d4f0e2; }
+.grade-B { background: linear-gradient(135deg, #1a4a8c 0%, #133870 100%); color: #cfe0f5; }
+.grade-C { background: linear-gradient(135deg, #5a4a20 0%, #3d3210 100%); color: #f0dfa0; }
+.grade-D { background: linear-gradient(135deg, #5a2020 0%, #3d1010 100%); color: #f0c0c0; }
+.grade-F { background: #2a2a2a; color: #aaa; }

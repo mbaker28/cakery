@@ -245,8 +245,32 @@ class GameController extends AbstractController
             return $this->redirectToRoute('game_new');
         }
 
+        $completed      = $bakery->getOrdersCompleted() ?? 0;
+        $failed         = $bakery->getOrdersFailed() ?? 0;
+        $total          = $completed + $failed;
+        $perfectOrders  = $bakery->getPerfectOrders();
+        $completionRate = $total > 0 ? $completed / $total : 0.0;
+        $reputationRate = $bakery->getReputation() / 100.0;
+        $score          = ($completionRate * 0.6 + $reputationRate * 0.4) * 100;
+
+        $grade = match(true) {
+            $score >= 95 => 'S',
+            $score >= 85 => 'A',
+            $score >= 70 => 'B',
+            $score >= 55 => 'C',
+            $score >= 40 => 'D',
+            default      => 'F',
+        };
+
         return $this->render('game/results.html.twig', [
-            'bakery' => $bakery,
+            'bakery'         => $bakery,
+            'grade'          => $grade,
+            'score'          => round($score),
+            'total'          => $total,
+            'completed'      => $completed,
+            'failed'         => $failed,
+            'perfectOrders'  => $perfectOrders,
+            'completionRate' => $completionRate,
         ]);
     }
 
